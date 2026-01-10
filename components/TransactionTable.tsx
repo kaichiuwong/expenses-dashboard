@@ -16,9 +16,9 @@ const TrashIcon = () => (
 );
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onEdit, onDelete }) => {
-  // Sort by date desc
+  // Sort by date asc
   const sorted = [...transactions].sort((a, b) => 
-    new Date(b.trx_date).getTime() - new Date(a.trx_date).getTime()
+    new Date(a.trx_date).getTime() - new Date(b.trx_date).getTime()
   );
 
   return (

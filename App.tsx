@@ -336,14 +336,21 @@ const App: React.FC = () => {
                           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
                         }}
                         itemStyle={{ color: chartColors.tooltipText }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                        formatter={(value: number) => {
+                          const percent = expense > 0 ? (value / expense) * 100 : 0;
+                          return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, 'Amount'];
+                        }}
                       />
                       <Legend 
                         layout="vertical" 
                         verticalAlign="middle" 
                         align="right"
                         iconType="circle"
-                        formatter={(value) => <span style={{ color: chartColors.text }}>{value}</span>}
+                        formatter={(value, entry: any) => {
+                          const val = entry.payload.value;
+                          const percent = expense > 0 ? (val / expense) * 100 : 0;
+                          return <span style={{ color: chartColors.text }}>{value} ({percent.toFixed(1)}%)</span>;
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
