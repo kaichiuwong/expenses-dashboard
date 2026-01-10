@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchCategories, addTransaction, updateTransaction } from '../services/api';
+import { fetchCategories, addTransaction, updateTransaction, fetchExchangeRate } from '../services/api';
 import { Category, Transaction } from '../types';
 
 interface AddTransactionModalProps {
@@ -10,6 +10,10 @@ interface AddTransactionModalProps {
 }
 
 type TransactionType = 'expense' | 'income';
+
+const CURRENCIES = [
+  'AUD', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'NZD', 'SGD', 'CNY', 'INR', 'HKD'
+];
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
   isOpen, 
@@ -23,6 +27,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [type, setType] = useState<TransactionType>('expense');
   const [categoryName, setCategoryName] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Currency State
+  const [currency, setCurrency] = useState('AUD');
+  const [fxRate, setFxRate] = useState<string>('1.0');
+  const [isLoadingFx, setIsLoadingFx] = useState(false);
+  
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +47,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         // Edit mode - populate fields
         setDate(transactionToEdit.trx_date);
         setName(transactionToEdit.name);
+        
+        // Since backend stores final AUD amount, we default to AUD with rate 1
+        setCurrency('AUD');
+        setFxRate('1.0');
+
         // If amount is negative, it's income. Absolute value for input.
         if (transactionToEdit.amount < 0) {
           setType('income');
@@ -52,11 +67,38 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         setName('');
         setAmount('');
         setType('expense');
+        setCurrency('AUD');
+        setFxRate('1.0');
         // categoryName will be set after categories load if empty
         setError(null);
       }
     }
   }, [isOpen, transactionToEdit]);
+
+  // Handle Currency Change
+  useEffect(() => {
+    const updateRate = async () => {
+      if (currency === 'AUD') {
+        setFxRate('1.0');
+        return;
+      }
+
+      setIsLoadingFx(true);
+      try {
+        const rate = await fetchExchangeRate(currency);
+        setFxRate(rate.toString());
+      } catch (err) {
+        console.error('Failed to update FX rate', err);
+        // Don't override existing rate on error, allows manual entry
+      } finally {
+        setIsLoadingFx(false);
+      }
+    };
+
+    if (isOpen) {
+      updateRate();
+    }
+  }, [currency, isOpen]);
 
   const loadCategories = async () => {
     setIsLoadingCategories(true);
@@ -79,7 +121,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryName || !name || !amount || !date) {
+    if (!categoryName || !name || !amount || !date || !fxRate) {
       setError('All fields are required.');
       return;
     }
@@ -87,7 +129,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     setIsSubmitting(true);
     setError(null);
 
-    let finalAmount = parseFloat(amount);
+    let inputAmount = parseFloat(amount);
+    const rate = parseFloat(fxRate);
+    
+    // Calculate final AUD amount
+    let finalAmount = inputAmount * rate;
+
     // If income, ensure amount is negative.
     // If expense, ensure amount is positive.
     if (type === 'income') {
@@ -95,6 +142,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     } else {
       finalAmount = Math.abs(finalAmount);
     }
+
+    // Round to 2 decimal places for storage
+    finalAmount = Math.round(finalAmount * 100) / 100;
 
     const payload = {
       trx_date: date,
@@ -120,6 +170,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  // Calculate estimated display amount
+  const displayTotal = amount && fxRate 
+    ? (parseFloat(amount) * parseFloat(fxRate)).toLocaleString('en-US', { style: 'currency', currency: 'AUD' })
+    : '$0.00';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
@@ -225,14 +280,26 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             />
           </div>
 
-          <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Amount
-            </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="text-slate-500 dark:text-slate-400 sm:text-sm">$</span>
-              </div>
+          <div className="grid grid-cols-5 gap-4">
+            <div className="col-span-2">
+               <label htmlFor="currency" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Currency
+              </label>
+              <select
+                id="currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
+              >
+                {CURRENCIES.map(curr => (
+                  <option key={curr} value={curr}>{curr}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-3">
+              <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Amount
+              </label>
               <input
                 type="number"
                 id="amount"
@@ -242,8 +309,40 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pl-7 pr-3 py-2 border shadow-sm outline-none"
+                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="fxRate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-2">
+                FX Rate
+                {isLoadingFx && (
+                  <svg className="animate-spin h-3 w-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+              </label>
+              <input
+                type="number"
+                id="fxRate"
+                required
+                step="0.0001"
+                value={fxRate}
+                disabled={currency === 'AUD'}
+                onChange={(e) => setFxRate(e.target.value)}
+                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                 Total (AUD)
+              </label>
+              <div className="w-full rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sm:text-sm px-3 py-2 border border-slate-200 dark:border-slate-700 font-medium">
+                {displayTotal}
+              </div>
             </div>
           </div>
 
@@ -257,7 +356,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || isLoadingCategories}
+              disabled={isSubmitting || isLoadingCategories || isLoadingFx}
               className={`flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 type === 'income' 
                   ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 

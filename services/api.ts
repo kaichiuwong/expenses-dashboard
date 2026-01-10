@@ -118,6 +118,33 @@ export const fetchYearlySummary = async (year: string): Promise<YearlySummaryRes
   return response.json();
 };
 
+export const fetchExchangeRate = async (currencyCode: string): Promise<number> => {
+  if (currencyCode === 'AUD') return 1;
+  
+  try {
+    // Using a public free API for exchange rates. 
+    // This fetches rates where base is the selected currency (e.g., 1 USD = x AUD)
+    const response = await fetch(`https://open.er-api.com/v6/latest/${currencyCode}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch exchange rates');
+    }
+
+    const data = await response.json();
+    const rate = data.rates?.AUD;
+
+    if (!rate) {
+      throw new Error(`Rate for AUD not found in ${currencyCode} response`);
+    }
+
+    return rate;
+  } catch (error) {
+    console.error('Exchange rate fetch error:', error);
+    // Return 1 as fallback to prevent total failure, user can manually edit
+    return 1;
+  }
+};
+
 export const addTransaction = async (data: CreateTransactionPayload['transaction']): Promise<void> => {
   const url = `${BASE_URL}/transaction`;
 
