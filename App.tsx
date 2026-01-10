@@ -29,6 +29,9 @@ const TagIcon = () => (
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
 );
+const TargetIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+);
 const SunIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
 );
@@ -51,6 +54,11 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  
+  // Target Savings State
+  const [targetSavings, setTargetSavings] = useState(2000);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [tempTargetInput, setTempTargetInput] = useState("2000");
   
   const { theme, toggleTheme } = useTheme();
 
@@ -102,7 +110,33 @@ const App: React.FC = () => {
 
   const topCategory = allocationData.find(d => d.name !== 'SAVINGS')?.name || 'N/A';
   const topCategoryAmount = allocationData.find(d => d.name !== 'SAVINGS')?.value || 0;
-  const transactionCount = transactions.length;
+
+  // Targeted Daily Expense Calculation
+  const { dailyTarget, remainingDays } = useMemo(() => {
+    const now = new Date();
+    const [y, m] = month.split('-').map(Number);
+    // new Date(y, m, 0) gives last day of month 'm'
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const todayDate = now.getDate();
+
+    const isCurrentMonth = now.getFullYear() === y && now.getMonth() + 1 === m;
+    const isFuture = new Date(y, m - 1, 1) > now;
+    const isPast = new Date(y, m, 0) < now;
+
+    let remDays = 0;
+    if (isFuture) {
+      remDays = daysInMonth;
+    } else if (isCurrentMonth) {
+      remDays = Math.max(0, daysInMonth - todayDate + 1);
+    } else if (isPast) {
+      remDays = 0;
+    }
+
+    const availableBudget = income - expense - targetSavings;
+    const daily = remDays > 0 ? availableBudget / remDays : 0;
+
+    return { dailyTarget: daily, remainingDays: remDays };
+  }, [month, income, expense, targetSavings]);
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMonth(e.target.value);
@@ -307,11 +341,56 @@ const App: React.FC = () => {
                     trendColor="text-indigo-600 dark:text-indigo-400"
                   />
                   <SummaryCard 
-                    title="Total Transactions" 
-                    value={transactionCount.toString()} 
-                    icon={<CalendarIcon />}
-                    trend="Recorded entries"
-                    trendColor="text-slate-500 dark:text-slate-400"
+                    title="Target Daily Expense" 
+                    value={
+                        remainingDays <= 0 ? (
+                           <span className="text-slate-400 text-xl font-semibold">Month Ended</span>
+                        ) : dailyTarget < 0 ? (
+                           <span className="text-red-500 dark:text-red-400 text-xl font-semibold">Over Budget</span>
+                        ) : (
+                           `$${dailyTarget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        )
+                    } 
+                    icon={<TargetIcon />}
+                    trend={
+                        isEditingTarget ? (
+                            <div className="flex items-center gap-1 mt-1">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">Target: $</span>
+                                <input 
+                                    type="number" 
+                                    value={tempTargetInput}
+                                    onChange={(e) => setTempTargetInput(e.target.value)}
+                                    className="w-20 px-1 py-0.5 text-xs border rounded bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    autoFocus
+                                    onBlur={() => {
+                                        setTargetSavings(parseFloat(tempTargetInput) || 0);
+                                        setIsEditingTarget(false);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            setTargetSavings(parseFloat(tempTargetInput) || 0);
+                                            setIsEditingTarget(false);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <button 
+                                onClick={() => {
+                                    setTempTargetInput(targetSavings.toString());
+                                    setIsEditingTarget(true);
+                                }}
+                                className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus:outline-none group"
+                                title="Click to edit target savings"
+                            >
+                                <span>Target Savings: ${targetSavings.toLocaleString()}</span>
+                                <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                        )
+                    }
+                    trendColor="text-indigo-600 dark:text-indigo-400"
                   />
                 </div>
 

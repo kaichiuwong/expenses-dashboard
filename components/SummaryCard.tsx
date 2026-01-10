@@ -4,7 +4,7 @@ interface SummaryCardProps {
   title: string;
   value: React.ReactNode;
   icon?: React.ReactNode;
-  trend?: string;
+  trend?: React.ReactNode;
   trendColor?: string;
 }
 
@@ -15,9 +15,9 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, icon, tr
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{title}</p>
         <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</div>
         {trend && (
-          <p className={`text-xs mt-2 font-medium ${trendColor || 'text-slate-400 dark:text-slate-500'}`}>
+          <div className={`text-xs mt-2 font-medium ${trendColor || 'text-slate-400 dark:text-slate-500'}`}>
             {trend}
-          </p>
+          </div>
         )}
       </div>
       {icon && (
