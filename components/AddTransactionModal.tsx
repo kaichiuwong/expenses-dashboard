@@ -9,6 +9,8 @@ interface AddTransactionModalProps {
   transactionToEdit?: Transaction | null;
 }
 
+type TransactionType = 'expense' | 'income';
+
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -18,6 +20,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
+  const [type, setType] = useState<TransactionType>('expense');
   const [categoryName, setCategoryName] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -34,13 +37,21 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         // Edit mode - populate fields
         setDate(transactionToEdit.trx_date);
         setName(transactionToEdit.name);
-        setAmount(transactionToEdit.amount.toString());
+        // If amount is negative, it's income. Absolute value for input.
+        if (transactionToEdit.amount < 0) {
+          setType('income');
+          setAmount(Math.abs(transactionToEdit.amount).toString());
+        } else {
+          setType('expense');
+          setAmount(transactionToEdit.amount.toString());
+        }
         setCategoryName(transactionToEdit.category.name);
       } else {
         // Add mode - reset fields
         setDate(new Date().toISOString().split('T')[0]);
         setName('');
         setAmount('');
+        setType('expense');
         // categoryName will be set after categories load if empty
         setError(null);
       }
@@ -76,11 +87,20 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     setIsSubmitting(true);
     setError(null);
 
+    let finalAmount = parseFloat(amount);
+    // If income, ensure amount is negative.
+    // If expense, ensure amount is positive.
+    if (type === 'income') {
+      finalAmount = -Math.abs(finalAmount);
+    } else {
+      finalAmount = Math.abs(finalAmount);
+    }
+
     const payload = {
       trx_date: date,
       category_name: categoryName,
       name: name,
-      amount: parseFloat(amount),
+      amount: finalAmount,
     };
 
     try {
@@ -122,6 +142,32 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               {error}
             </div>
           )}
+
+          {/* Type Toggle */}
+          <div className="flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1 mb-4">
+            <button
+              type="button"
+              onClick={() => setType('expense')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                type === 'expense'
+                  ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => setType('income')}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                type === 'income'
+                  ? 'bg-white dark:bg-slate-600 text-green-600 dark:text-green-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              Income
+            </button>
+          </div>
 
           <div>
             <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -172,7 +218,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               type="text"
               id="name"
               required
-              placeholder="e.g. Lunch at Cafe"
+              placeholder={type === 'income' ? 'e.g. Salary, Refund' : 'e.g. Lunch at Cafe'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
@@ -212,9 +258,13 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || isLoadingCategories}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                type === 'income' 
+                  ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+              }`}
             >
-              {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Transaction' : 'Add Transaction')}
+              {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add') + (type === 'income' ? ' Income' : ' Expense')}
             </button>
           </div>
         </form>

@@ -6,7 +6,7 @@ import {
 import { fetchTransactions, deleteTransaction } from './services/api';
 import { Transaction } from './types';
 import { 
-  calculateTotalExpenses, 
+  calculateFinancials, 
   getExpensesByCategory, 
   getExpensesByDate, 
   getExpensesByWeekday 
@@ -65,7 +65,7 @@ const App: React.FC = () => {
   }, [loadData]);
 
   // Analytics
-  const totalExpenses = useMemo(() => calculateTotalExpenses(transactions), [transactions]);
+  const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
   const categoryData = useMemo(() => getExpensesByCategory(transactions), [transactions]);
   const dateData = useMemo(() => getExpensesByDate(transactions), [transactions]);
   const weekdayData = useMemo(() => getExpensesByWeekday(transactions), [transactions]);
@@ -200,14 +200,21 @@ const App: React.FC = () => {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <SummaryCard 
-                title="Total Expenses" 
-                value={`$${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
+                title="Monthly Overview" 
+                value={
+                  <div className="flex flex-col gap-1">
+                    <span className="text-lg">Expenses: ${expense.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <span className={`text-sm font-semibold ${savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      Savings: ${savings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                }
                 icon={<DollarIcon />}
-                trend="For selected month"
+                trend="Net Balance"
                 trendColor="text-slate-500 dark:text-slate-400"
               />
               <SummaryCard 
-                title="Top Category" 
+                title="Top Expense Category" 
                 value={topCategory} 
                 icon={<TagIcon />}
                 trend={categoryData.length > 0 ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
