@@ -29,8 +29,9 @@ This application is ready to be deployed on [Vercel](https://vercel.com).
     Expand the "Environment Variables" section and add the following:
     
     *   `REACT_APP_SUPABASE_KEY`: `your_supabase_api_key_here`
+    *   `REACT_APP_API_BASE_URL`: `your_api_base_url_here`
     
-    *(Note: If you are using the demo key provided in the source code, this step is optional as the code has a fallback, but it is best practice to set it in the environment).*
+    *(Note: If you are using the demo backend, you can skip these as the code has defaults, but it is best practice to set them).*
 
 5.  **Deploy**: Click "Deploy". Vercel will build and launch your application.
 
@@ -39,6 +40,7 @@ This application is ready to be deployed on [Vercel](https://vercel.com).
 | Variable | Description |
 | :--- | :--- |
 | `REACT_APP_SUPABASE_KEY` | The API Key for the Supabase Function to retrieve transaction data. |
+| `REACT_APP_API_BASE_URL` | The base URL for the API (e.g., `https://project.supabase.co/functions/v1`). |
 
 ## Local Development
 

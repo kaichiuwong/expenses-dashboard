@@ -1,6 +1,6 @@
 import { TransactionResponse, CategoryResponse, CreateTransactionPayload } from '../types';
 
-const BASE_URL = 'https://rcwxnpbxhuvhnnwcijga.supabase.co/functions/v1';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://rcwxnpbxhuvhnnwcijga.supabase.co/functions/v1';
 const API_KEY = process.env.REACT_APP_SUPABASE_KEY || 'sb_publishable_DzJJTqmieYKyofXX1GuCrA_KZuJuRnY';
 
 const getHeaders = () => ({
