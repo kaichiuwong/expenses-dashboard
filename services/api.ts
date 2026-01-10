@@ -1,7 +1,22 @@
 import { TransactionResponse, CategoryResponse, CreateTransactionPayload } from '../types';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
-const API_KEY = process.env.REACT_APP_SUPABASE_KEY || '';
+// Safely access environment variables to prevent "process is not defined" errors in browser
+const getEnv = (key: string) => {
+  try {
+    // Check for standard Node/CRA process.env
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env[key];
+    }
+    // Fallback for Vite if it replaces import.meta.env but we can't rely on it being there in all setups
+    // (Note: In a pure Vite setup, you should use import.meta.env.VITE_...)
+  } catch (e) {
+    // ignore
+  }
+  return '';
+};
+
+const BASE_URL = getEnv('REACT_APP_API_BASE_URL') || '';
+const API_KEY = getEnv('REACT_APP_SUPABASE_KEY') || '';
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
