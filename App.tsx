@@ -15,6 +15,7 @@ import { SummaryCard } from './components/SummaryCard';
 import { TransactionTable } from './components/TransactionTable';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { BulkImportModal } from './components/BulkImportModal';
+import { YearlyDashboard } from './components/YearlyDashboard';
 import { useTheme } from './hooks/useTheme';
 
 // Icons
@@ -41,6 +42,7 @@ const DownloadIcon = () => (
 );
 
 const App: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
   const [month, setMonth] = useState('2026-01');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,9 @@ const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   const loadData = useCallback(async () => {
+    // Only load transaction list data if in monthly view
+    if (viewMode !== 'monthly') return;
+
     setLoading(true);
     setError(null);
     try {
@@ -63,13 +68,13 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [month]);
+  }, [month, viewMode]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Analytics
+  // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
   const categoryData = useMemo(() => getExpensesByCategory(transactions), [transactions]);
   const dateData = useMemo(() => getExpensesByDate(transactions), [transactions]);
@@ -132,49 +137,69 @@ const App: React.FC = () => {
               $
             </div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white hidden sm:block">Expenses Dashboard</h1>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white sm:hidden">Expenses</h1>
           </div>
+          
           <div className="flex items-center gap-2 sm:gap-4">
-             <div className="flex items-center gap-2">
-              <input 
-                type="month" 
-                id="month" 
-                value={month} 
-                onChange={handleMonthChange}
-                className="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-2 sm:px-3 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-sm transition-colors"
-              />
+            {/* View Toggle */}
+            <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg flex text-sm font-medium">
+               <button 
+                 onClick={() => setViewMode('monthly')}
+                 className={`px-3 py-1 rounded-md transition-all ${viewMode === 'monthly' ? 'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+               >
+                 Monthly
+               </button>
+               <button 
+                 onClick={() => setViewMode('yearly')}
+                 className={`px-3 py-1 rounded-md transition-all ${viewMode === 'yearly' ? 'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+               >
+                 Yearly
+               </button>
             </div>
-            
-            <button
-              onClick={openBulkModal}
-              className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
-              title="Import Regular Transactions"
-            >
-              <DownloadIcon />
-              Import
-            </button>
-            <button
-              onClick={openBulkModal}
-              className="sm:hidden flex items-center justify-center bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
-              aria-label="Import Regular Transactions"
-            >
-              <DownloadIcon />
-            </button>
 
-            <button
-              onClick={openAddModal}
-              className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
-            >
-              <PlusIcon />
-              Add
-            </button>
-            <button
-              onClick={openAddModal}
-              className="sm:hidden flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
-              aria-label="Add Transaction"
-            >
-              <PlusIcon />
-            </button>
+            {viewMode === 'monthly' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="month" 
+                    id="month" 
+                    value={month} 
+                    onChange={handleMonthChange}
+                    className="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-2 sm:px-3 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-sm transition-colors"
+                  />
+                </div>
+                
+                <button
+                  onClick={openBulkModal}
+                  className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                  title="Import Regular Transactions"
+                >
+                  <DownloadIcon />
+                  Import
+                </button>
+                <button
+                  onClick={openBulkModal}
+                  className="sm:hidden flex items-center justify-center bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                  aria-label="Import Regular Transactions"
+                >
+                  <DownloadIcon />
+                </button>
+
+                <button
+                  onClick={openAddModal}
+                  className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                >
+                  <PlusIcon />
+                  Add
+                </button>
+                <button
+                  onClick={openAddModal}
+                  className="sm:hidden flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                  aria-label="Add Transaction"
+                >
+                  <PlusIcon />
+                </button>
+              </>
+            )}
 
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
             
@@ -191,238 +216,244 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-r">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {error}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading State Skeleton */}
-        {loading ? (
-          <div className="animate-pulse space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>)}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
-               <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
-            </div>
-          </div>
+        {viewMode === 'yearly' ? (
+          <YearlyDashboard initialYear={month.split('-')[0]} />
         ) : (
-          <div className="space-y-6">
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <SummaryCard 
-                title="Monthly Overview" 
-                value={
-                  <div className="flex flex-col gap-1">
-                    <span className="text-lg">Expenses: ${expense.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    <span className={`text-sm font-semibold ${savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      Savings: ${savings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
+          <>
+            {/* Error State */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-r">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                }
-                icon={<DollarIcon />}
-                trend="Net Balance"
-                trendColor="text-slate-500 dark:text-slate-400"
-              />
-              <SummaryCard 
-                title="Top Expense Category" 
-                value={topCategory} 
-                icon={<TagIcon />}
-                trend={categoryData.length > 0 ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
-                trendColor="text-indigo-600 dark:text-indigo-400"
-              />
-              <SummaryCard 
-                title="Total Transactions" 
-                value={transactionCount.toString()} 
-                icon={<CalendarIcon />}
-                trend="Recorded entries"
-                trendColor="text-slate-500 dark:text-slate-400"
-              />
-            </div>
-
-            {/* Main Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Daily Trend */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Daily Spending Trend</h3>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={chartColors.areaGradientStart} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={chartColors.areaGradientStart} stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(val) => val.split('-')[2]} 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: chartColors.text, fontSize: 12 }}
-                        dy={10}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: chartColors.text, fontSize: 12 }}
-                        tickFormatter={(val) => `$${val}`}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: chartColors.tooltipBg,
-                          borderColor: chartColors.grid,
-                          borderRadius: '8px', 
-                          color: chartColors.tooltipText,
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                        }}
-                        itemStyle={{ color: chartColors.tooltipText }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Spent']}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="amount" 
-                        stroke={chartColors.areaStroke} 
-                        fillOpacity={1} 
-                        fill="url(#colorAmount)" 
-                        strokeWidth={2} 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      {error}
+                    </p>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* Category Pie */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Expenses by Category</h3>
-                <div className="h-72 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: chartColors.tooltipBg,
-                          borderColor: chartColors.grid,
-                          borderRadius: '8px', 
-                          color: chartColors.tooltipText,
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                        }}
-                        itemStyle={{ color: chartColors.tooltipText }}
-                        formatter={(value: number) => {
-                          const percent = expense > 0 ? (value / expense) * 100 : 0;
-                          return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, 'Amount'];
-                        }}
-                      />
-                      <Legend 
-                        layout="vertical" 
-                        verticalAlign="middle" 
-                        align="right"
-                        iconType="circle"
-                        formatter={(value, entry: any) => {
-                          const val = entry.payload.value;
-                          const percent = expense > 0 ? (val / expense) * 100 : 0;
-                          return <span style={{ color: chartColors.text }}>{value} ({percent.toFixed(1)}%)</span>;
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+            {/* Loading State Skeleton */}
+            {loading ? (
+              <div className="animate-pulse space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[1, 2, 3].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                  <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-6">
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <SummaryCard 
+                    title="Monthly Overview" 
+                    value={
+                      <div className="flex flex-col gap-1">
+                        <span className="text-lg">Expenses: ${expense.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className={`text-sm font-semibold ${savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          Savings: ${savings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    }
+                    icon={<DollarIcon />}
+                    trend="Net Balance"
+                    trendColor="text-slate-500 dark:text-slate-400"
+                  />
+                  <SummaryCard 
+                    title="Top Expense Category" 
+                    value={topCategory} 
+                    icon={<TagIcon />}
+                    trend={categoryData.length > 0 ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
+                    trendColor="text-indigo-600 dark:text-indigo-400"
+                  />
+                  <SummaryCard 
+                    title="Total Transactions" 
+                    value={transactionCount.toString()} 
+                    icon={<CalendarIcon />}
+                    trend="Recorded entries"
+                    trendColor="text-slate-500 dark:text-slate-400"
+                  />
+                </div>
 
-            {/* Weekday Analysis */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Day of Week</h3>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weekdayData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: chartColors.text, fontSize: 12 }}
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: chartColors.text, fontSize: 12 }}
-                      tickFormatter={(val) => `$${val}`}
-                    />
-                    <Tooltip 
-                      cursor={{ fill: theme === 'dark' ? '#334155' : '#f8fafc' }}
-                      contentStyle={{ 
-                        backgroundColor: chartColors.tooltipBg,
-                        borderColor: chartColors.grid,
-                        borderRadius: '8px', 
-                        color: chartColors.tooltipText,
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                      }}
-                      itemStyle={{ color: chartColors.tooltipText }}
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Total']}
-                    />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+                {/* Main Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Daily Trend */}
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Daily Spending Trend</h3>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={dateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={chartColors.areaGradientStart} stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor={chartColors.areaGradientStart} stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(val) => val.split('-')[2]} 
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: chartColors.text, fontSize: 12 }}
+                            dy={10}
+                          />
+                          <YAxis 
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: chartColors.text, fontSize: 12 }}
+                            tickFormatter={(val) => `$${val}`}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: chartColors.tooltipBg,
+                              borderColor: chartColors.grid,
+                              borderRadius: '8px', 
+                              color: chartColors.tooltipText,
+                              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                            }}
+                            itemStyle={{ color: chartColors.tooltipText }}
+                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Spent']}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="amount" 
+                            stroke={chartColors.areaStroke} 
+                            fillOpacity={1} 
+                            fill="url(#colorAmount)" 
+                            strokeWidth={2} 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
 
-            {/* Transaction List */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all">
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Transaction History</h3>
+                  {/* Category Pie */}
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Expenses by Category</h3>
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={90}
+                            paddingAngle={5}
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: chartColors.tooltipBg,
+                              borderColor: chartColors.grid,
+                              borderRadius: '8px', 
+                              color: chartColors.tooltipText,
+                              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                            }}
+                            itemStyle={{ color: chartColors.tooltipText }}
+                            formatter={(value: number) => {
+                              const percent = expense > 0 ? (value / expense) * 100 : 0;
+                              return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, 'Amount'];
+                            }}
+                          />
+                          <Legend 
+                            layout="vertical" 
+                            verticalAlign="middle" 
+                            align="right"
+                            iconType="circle"
+                            formatter={(value, entry: any) => {
+                              const val = entry.payload.value;
+                              const percent = expense > 0 ? (val / expense) * 100 : 0;
+                              return <span style={{ color: chartColors.text }}>{value} ({percent.toFixed(1)}%)</span>;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Weekday Analysis */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Day of Week</h3>
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weekdayData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false}
+                          tick={{ fill: chartColors.text, fontSize: 12 }}
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false}
+                          tick={{ fill: chartColors.text, fontSize: 12 }}
+                          tickFormatter={(val) => `$${val}`}
+                        />
+                        <Tooltip 
+                          cursor={{ fill: theme === 'dark' ? '#334155' : '#f8fafc' }}
+                          contentStyle={{ 
+                            backgroundColor: chartColors.tooltipBg,
+                            borderColor: chartColors.grid,
+                            borderRadius: '8px', 
+                            color: chartColors.tooltipText,
+                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                          }}
+                          itemStyle={{ color: chartColors.tooltipText }}
+                          formatter={(value: number) => [`$${value.toFixed(2)}`, 'Total']}
+                        />
+                        <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Transaction List */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">Transaction History</h3>
+                  </div>
+                  <TransactionTable 
+                    transactions={transactions} 
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                </div>
               </div>
-              <TransactionTable 
-                transactions={transactions} 
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            </div>
-          </div>
+            )}
+
+            <AddTransactionModal 
+              isOpen={isModalOpen} 
+              onClose={() => setIsModalOpen(false)} 
+              onSuccess={handleTransactionSaved}
+              transactionToEdit={editingTransaction}
+            />
+
+            <BulkImportModal 
+              isOpen={isBulkModalOpen}
+              onClose={() => setIsBulkModalOpen(false)}
+              onSuccess={handleTransactionSaved}
+              targetMonth={month}
+            />
+          </>
         )}
-
-        <AddTransactionModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          onSuccess={handleTransactionSaved}
-          transactionToEdit={editingTransaction}
-        />
-
-        <BulkImportModal 
-          isOpen={isBulkModalOpen}
-          onClose={() => setIsBulkModalOpen(false)}
-          onSuccess={handleTransactionSaved}
-          targetMonth={month}
-        />
       </main>
     </div>
   );

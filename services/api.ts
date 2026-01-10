@@ -3,7 +3,8 @@ import {
   CategoryResponse, 
   CreateTransactionPayload, 
   RegularTransactionResponse,
-  BulkCreateTransactionPayload
+  BulkCreateTransactionPayload,
+  YearlySummaryResponse
 } from '../types';
 
 // Default constants
@@ -97,6 +98,21 @@ export const fetchRegularTransactions = async (): Promise<RegularTransactionResp
 
   if (!response.ok) {
     throw new Error(`Error fetching regular transactions: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
+export const fetchYearlySummary = async (year: string): Promise<YearlySummaryResponse> => {
+  const url = `${BASE_URL}/summary?year=${year}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching yearly summary: ${response.statusText}`);
   }
 
   return response.json();

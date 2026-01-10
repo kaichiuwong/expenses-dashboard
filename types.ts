@@ -1,3 +1,4 @@
+
 export interface Category {
   id: string;
   name: string;
@@ -66,4 +67,32 @@ export interface DailyDataPoint {
   amount: number;
   dayOfMonth: number;
   [key: string]: any;
+}
+
+// Yearly Dashboard Types
+
+export interface YearlyCategoryExpense {
+  category_id: string;
+  category_name: string;
+  total: number;
+  percentage: number;
+}
+
+export interface MonthlySummary {
+  month: string;
+  total_expenses: number;
+  total_salary: number;
+  total_savings: number;
+  savings_percentage: number;
+  expenses_by_category: YearlyCategoryExpense[];
+}
+
+export interface YearlySummaryResponse {
+  year: string;
+  yearly_total_income: number;
+  yearly_total_expenses: number;
+  yearly_total_savings: number;
+  yearly_savings_percentage: number;
+  yearly_expenses_by_category: YearlyCategoryExpense[];
+  monthly_breakdown: MonthlySummary[];
 }
