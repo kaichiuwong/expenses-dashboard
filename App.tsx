@@ -76,12 +76,31 @@ const App: React.FC = () => {
 
   // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
-  const categoryData = useMemo(() => getExpensesByCategory(transactions), [transactions]);
   const dateData = useMemo(() => getExpensesByDate(transactions), [transactions]);
   const weekdayData = useMemo(() => getExpensesByWeekday(transactions), [transactions]);
+  
+  const allocationData = useMemo(() => {
+    const expenses = getExpensesByCategory(transactions);
+    const data = [...expenses];
+    
+    if (savings > 0) {
+      data.push({
+        name: 'SAVINGS',
+        value: savings,
+        color: '#10b981' // Green
+      });
+    }
+    
+    // Sort descending by value
+    return data.sort((a, b) => b.value - a.value);
+  }, [transactions, savings]);
 
-  const topCategory = categoryData.length > 0 ? categoryData[0].name : 'N/A';
-  const topCategoryAmount = categoryData.length > 0 ? categoryData[0].value : 0;
+  const totalPieValue = useMemo(() => {
+    return allocationData.reduce((acc, cur) => acc + cur.value, 0);
+  }, [allocationData]);
+
+  const topCategory = allocationData.find(d => d.name !== 'SAVINGS')?.name || 'N/A';
+  const topCategoryAmount = allocationData.find(d => d.name !== 'SAVINGS')?.value || 0;
   const transactionCount = transactions.length;
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,7 +290,7 @@ const App: React.FC = () => {
                     title="Top Expense Category" 
                     value={topCategory} 
                     icon={<TagIcon />}
-                    trend={categoryData.length > 0 ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
+                    trend={allocationData.some(d => d.name !== 'SAVINGS') ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
                     trendColor="text-indigo-600 dark:text-indigo-400"
                   />
                   <SummaryCard 
@@ -307,7 +326,7 @@ const App: React.FC = () => {
                             dy={10}
                           />
                           <YAxis 
-                            axisLine={false}
+                            axisLine={false} 
                             tickLine={false}
                             tick={{ fill: chartColors.text, fontSize: 12 }}
                             tickFormatter={(val) => `$${val}`}
@@ -338,12 +357,12 @@ const App: React.FC = () => {
 
                   {/* Category Pie */}
                   <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Expenses by Category</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Allocation</h3>
                     <div className="h-72 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={categoryData}
+                            data={allocationData}
                             cx="50%"
                             cy="50%"
                             innerRadius={60}
@@ -352,7 +371,7 @@ const App: React.FC = () => {
                             dataKey="value"
                             stroke="none"
                           >
-                            {categoryData.map((entry, index) => (
+                            {allocationData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
@@ -366,7 +385,7 @@ const App: React.FC = () => {
                             }}
                             itemStyle={{ color: chartColors.tooltipText }}
                             formatter={(value: number) => {
-                              const percent = expense > 0 ? (value / expense) * 100 : 0;
+                              const percent = totalPieValue > 0 ? (value / totalPieValue) * 100 : 0;
                               return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, 'Amount'];
                             }}
                           />
@@ -377,7 +396,7 @@ const App: React.FC = () => {
                             iconType="circle"
                             formatter={(value, entry: any) => {
                               const val = entry.payload.value;
-                              const percent = expense > 0 ? (val / expense) * 100 : 0;
+                              const percent = totalPieValue > 0 ? (val / totalPieValue) * 100 : 0;
                               return <span style={{ color: chartColors.text }}>{value} ({percent.toFixed(1)}%)</span>;
                             }}
                           />

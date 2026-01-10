@@ -107,9 +107,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       const fetchedCats = data.categories || [];
       setCategories(fetchedCats);
       
-      // If adding new (not editing) and no category selected yet, pick first
+      // If adding new (not editing) and no category selected yet
       if (!transactionToEdit && !categoryName && fetchedCats.length > 0) {
-        setCategoryName(fetchedCats[0].name);
+        const defaultCat = fetchedCats.find(c => c.name.toUpperCase() === 'EAT OUT');
+        if (defaultCat) {
+          setCategoryName(defaultCat.name);
+        } else {
+          setCategoryName(fetchedCats[0].name);
+        }
       }
     } catch (err) {
       console.error('Failed to load categories', err);
