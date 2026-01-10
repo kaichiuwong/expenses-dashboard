@@ -71,6 +71,7 @@ const App: React.FC = () => {
   const weekdayData = useMemo(() => getExpensesByWeekday(transactions), [transactions]);
 
   const topCategory = categoryData.length > 0 ? categoryData[0].name : 'N/A';
+  const topCategoryAmount = categoryData.length > 0 ? categoryData[0].value : 0;
   const transactionCount = transactions.length;
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +210,7 @@ const App: React.FC = () => {
                 title="Top Category" 
                 value={topCategory} 
                 icon={<TagIcon />}
-                trend={`${categoryData.length} categories active`}
+                trend={categoryData.length > 0 ? `Total: $${topCategoryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'No data'}
                 trendColor="text-indigo-600 dark:text-indigo-400"
               />
               <SummaryCard 
