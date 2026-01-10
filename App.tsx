@@ -16,6 +16,7 @@ import { TransactionTable } from './components/TransactionTable';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { YearlyDashboard } from './components/YearlyDashboard';
+import { RegularTransactionManager } from './components/RegularTransactionManager';
 import { useTheme } from './hooks/useTheme';
 
 // Icons
@@ -42,7 +43,7 @@ const DownloadIcon = () => (
 );
 
 const App: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular'>('monthly');
   const [month, setMonth] = useState('2026-01');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +174,12 @@ const App: React.FC = () => {
                >
                  Yearly
                </button>
+               <button 
+                 onClick={() => setViewMode('regular')}
+                 className={`px-3 py-1 rounded-md transition-all ${viewMode === 'regular' ? 'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+               >
+                 Templates
+               </button>
             </div>
 
             {viewMode === 'monthly' && (
@@ -235,9 +242,15 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {viewMode === 'yearly' ? (
+        {viewMode === 'yearly' && (
           <YearlyDashboard initialYear={month.split('-')[0]} />
-        ) : (
+        )}
+        
+        {viewMode === 'regular' && (
+          <RegularTransactionManager />
+        )}
+
+        {viewMode === 'monthly' && (
           <>
             {/* Error State */}
             {error && (

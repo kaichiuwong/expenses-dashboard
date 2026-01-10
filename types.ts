@@ -44,6 +44,14 @@ export interface RegularTransactionResponse {
   regularTransactions: RegularTransaction[];
 }
 
+export interface CreateRegularTransactionPayload {
+  regularTransaction: {
+    category_name: string;
+    name: string;
+    amount: number;
+  };
+}
+
 export interface BulkTransactionItem {
   category_name: string;
   amount: number;

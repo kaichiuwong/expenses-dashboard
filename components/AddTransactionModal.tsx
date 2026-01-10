@@ -182,7 +182,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     const payload = {
       trx_date: date,
       category_name: categoryName,
-      name: name,
+      name: name.toUpperCase(),
       amount: finalAmount,
     };
 
@@ -403,4 +403,4 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       </div>
     </div>
   );
-};
+}

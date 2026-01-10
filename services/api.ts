@@ -4,7 +4,8 @@ import {
   CreateTransactionPayload, 
   RegularTransactionResponse,
   BulkCreateTransactionPayload,
-  YearlySummaryResponse
+  YearlySummaryResponse,
+  CreateRegularTransactionPayload
 } from '../types';
 
 // Default constants
@@ -201,5 +202,51 @@ export const deleteTransaction = async (id: string): Promise<void> => {
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error deleting transaction: ${errorText || response.statusText}`);
+  }
+};
+
+// Regular Transaction (Templates) Operations
+
+export const addRegularTransaction = async (data: CreateRegularTransactionPayload['regularTransaction']): Promise<void> => {
+  const url = `${BASE_URL}/regular`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ regularTransaction: data }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error adding regular transaction: ${errorText || response.statusText}`);
+  }
+};
+
+export const updateRegularTransaction = async (id: string, data: CreateRegularTransactionPayload['regularTransaction']): Promise<void> => {
+  const url = `${BASE_URL}/regular/${id}`;
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ regularTransaction: data }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error updating regular transaction: ${errorText || response.statusText}`);
+  }
+};
+
+export const deleteRegularTransaction = async (id: string): Promise<void> => {
+  const url = `${BASE_URL}/regular/${id}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error deleting regular transaction: ${errorText || response.statusText}`);
   }
 };

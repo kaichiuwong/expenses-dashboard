@@ -90,7 +90,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
           category_name: t.category.name,
           amount: parseFloat(editedAmounts[t.id] || '0'),
           trx_date: trx_date,
-          name: t.name
+          name: t.name.toUpperCase()
         }));
 
       await addBulkTransactions(payload);
