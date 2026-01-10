@@ -252,6 +252,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
                     <Tooltip 
                       formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                       contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                      itemStyle={{ color: '#f8fafc' }}
                     />
                     <Legend />
                     <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -288,6 +289,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
                          return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, name];
                        }}
                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                       itemStyle={{ color: '#f8fafc' }}
                     />
                     <Legend 
                       layout="vertical" 
