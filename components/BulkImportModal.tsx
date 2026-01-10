@@ -17,6 +17,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 }) => {
   const [transactions, setTransactions] = useState<RegularTransaction[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [editedAmounts, setEditedAmounts] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +35,17 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
       const data = await fetchRegularTransactions();
       const regs = data.regularTransactions || [];
       setTransactions(regs);
+      
       // Select all by default
       setSelectedIds(new Set(regs.map(t => t.id)));
+      
+      // Initialize amounts with current values
+      const initialAmounts: Record<string, string> = {};
+      regs.forEach(t => {
+        initialAmounts[t.id] = t.amount.toString();
+      });
+      setEditedAmounts(initialAmounts);
+
     } catch (err: any) {
       console.error('Failed to load regular transactions', err);
       setError('Failed to load templates. Please check your connection.');
@@ -52,6 +62,13 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
+  };
+
+  const handleAmountChange = (id: string, value: string) => {
+    setEditedAmounts(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
   const handleImport = async () => {
@@ -71,7 +88,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
         .filter(t => selectedIds.has(t.id))
         .map(t => ({
           category_name: t.category.name,
-          amount: t.amount,
+          amount: parseFloat(editedAmounts[t.id] || '0'),
           trx_date: trx_date,
           name: t.name
         }));
@@ -113,6 +130,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
           <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
             Select transactions to import for <strong>{targetMonth}</strong>. All dates will be set to the 1st of the month.
+            <br/>You can edit amounts before importing.
           </p>
 
           {isLoading ? (
@@ -139,18 +157,23 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                       type="checkbox"
                       checked={selectedIds.has(t.id)}
                       onChange={() => toggleSelection(t.id)}
-                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                      className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mt-1"
                     />
-                    <div className="ml-3 flex-1 grid grid-cols-2 gap-2">
-                      <div>
+                    <div className="ml-3 flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                      <div className="flex-1">
                         <div className="font-medium text-slate-900 dark:text-slate-200">{t.name}</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">{t.category.name}</div>
                       </div>
-                      <div className={`text-right font-semibold ${t.amount < 0 ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        ${Math.abs(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        <span className="text-xs font-normal ml-1 text-slate-500">
-                           {t.amount < 0 ? '(Inc)' : '(Exp)'}
-                        </span>
+                      <div className="flex items-center gap-2">
+                         <span className="text-xs text-slate-400 font-medium">Amount:</span>
+                         <input 
+                            type="number" 
+                            step="0.01"
+                            value={editedAmounts[t.id] || 0}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => handleAmountChange(t.id, e.target.value)}
+                            className="w-28 px-2 py-1 text-right text-sm border rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                         />
                       </div>
                     </div>
                   </label>
