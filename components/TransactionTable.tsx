@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Transaction } from '../types';
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (id: string) => void;
 }
 
-export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => {
+const EditIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+);
+
+const TrashIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+);
+
+export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onEdit, onDelete }) => {
   // Sort by date desc
   const sorted = [...transactions].sort((a, b) => 
     new Date(b.trx_date).getTime() - new Date(a.trx_date).getTime()
@@ -20,11 +30,12 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
             <th scope="col" className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400">Name</th>
             <th scope="col" className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400">Category</th>
             <th scope="col" className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 text-right">Amount</th>
+            <th scope="col" className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
           {sorted.map((t) => (
-            <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
               <td className="px-6 py-4 font-medium text-slate-600 dark:text-slate-300">{t.trx_date}</td>
               <td className="px-6 py-4 text-slate-800 dark:text-slate-200 font-medium">{t.name}</td>
               <td className="px-6 py-4">
@@ -35,11 +46,29 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               <td className="px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-100">
                 ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
+              <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => onEdit(t)}
+                    className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+                    title="Edit"
+                  >
+                    <EditIcon />
+                  </button>
+                  <button 
+                    onClick={() => onDelete(t.id)}
+                    className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                    title="Delete"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              </td>
             </tr>
           ))}
           {sorted.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">
+              <td colSpan={5} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">
                 No transactions found for this period.
               </td>
             </tr>

@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { fetchCategories, addTransaction } from '../services/api';
-import { Category } from '../types';
+import { fetchCategories, addTransaction, updateTransaction } from '../services/api';
+import { Category, Transaction } from '../types';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  transactionToEdit?: Transaction | null;
 }
 
-export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  transactionToEdit 
+}) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -18,25 +24,39 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isEditMode = !!transactionToEdit;
+
   useEffect(() => {
     if (isOpen) {
       loadCategories();
-      // Reset form on open
-      setDate(new Date().toISOString().split('T')[0]);
-      setName('');
-      setAmount('');
-      setCategoryName('');
-      setError(null);
+      
+      if (transactionToEdit) {
+        // Edit mode - populate fields
+        setDate(transactionToEdit.trx_date);
+        setName(transactionToEdit.name);
+        setAmount(transactionToEdit.amount.toString());
+        setCategoryName(transactionToEdit.category.name);
+      } else {
+        // Add mode - reset fields
+        setDate(new Date().toISOString().split('T')[0]);
+        setName('');
+        setAmount('');
+        // categoryName will be set after categories load if empty
+        setError(null);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, transactionToEdit]);
 
   const loadCategories = async () => {
     setIsLoadingCategories(true);
     try {
       const data = await fetchCategories();
-      setCategories(data.categories || []);
-      if (data.categories && data.categories.length > 0) {
-        setCategoryName(data.categories[0].name);
+      const fetchedCats = data.categories || [];
+      setCategories(fetchedCats);
+      
+      // If adding new (not editing) and no category selected yet, pick first
+      if (!transactionToEdit && !categoryName && fetchedCats.length > 0) {
+        setCategoryName(fetchedCats[0].name);
       }
     } catch (err) {
       console.error('Failed to load categories', err);
@@ -56,18 +76,24 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
     setIsSubmitting(true);
     setError(null);
 
+    const payload = {
+      trx_date: date,
+      category_name: categoryName,
+      name: name,
+      amount: parseFloat(amount),
+    };
+
     try {
-      await addTransaction({
-        trx_date: date,
-        category_name: categoryName,
-        name: name,
-        amount: parseFloat(amount),
-      });
+      if (isEditMode && transactionToEdit) {
+        await updateTransaction(transactionToEdit.id, payload);
+      } else {
+        await addTransaction(payload);
+      }
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to add transaction.');
+      setError(err.message || `Failed to ${isEditMode ? 'update' : 'add'} transaction.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +105,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 dark:border-slate-700">
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add New Transaction</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+            {isEditMode ? 'Edit Transaction' : 'Add New Transaction'}
+          </h3>
           <button 
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
@@ -186,7 +214,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
               disabled={isSubmitting || isLoadingCategories}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Adding...' : 'Add Transaction'}
+              {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Transaction' : 'Add Transaction')}
             </button>
           </div>
         </form>

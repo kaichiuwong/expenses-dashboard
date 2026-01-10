@@ -34,10 +34,12 @@ export interface ChartDataPoint {
   name: string;
   value: number;
   color?: string;
+  [key: string]: any;
 }
 
 export interface DailyDataPoint {
   date: string;
   amount: number;
   dayOfMonth: number;
+  [key: string]: any;
 }

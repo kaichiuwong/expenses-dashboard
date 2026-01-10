@@ -3,7 +3,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
-import { fetchTransactions } from './services/api';
+import { fetchTransactions, deleteTransaction } from './services/api';
 import { Transaction } from './types';
 import { 
   calculateTotalExpenses, 
@@ -41,7 +41,8 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
   const { theme, toggleTheme } = useTheme();
 
@@ -76,8 +77,29 @@ const App: React.FC = () => {
     setMonth(e.target.value);
   };
 
-  const handleTransactionAdded = () => {
+  const handleTransactionSaved = () => {
     loadData();
+  };
+
+  const openAddModal = () => {
+    setEditingTransaction(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        await deleteTransaction(id);
+        loadData();
+      } catch (err: any) {
+        alert(`Failed to delete: ${err.message}`);
+      }
+    }
   };
 
   // Chart Styling based on theme
@@ -114,14 +136,14 @@ const App: React.FC = () => {
             </div>
             
             <button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={openAddModal}
               className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
             >
               <PlusIcon />
               Add
             </button>
             <button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={openAddModal}
               className="sm:hidden flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
               aria-label="Add Transaction"
             >
@@ -339,15 +361,20 @@ const App: React.FC = () => {
               <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">Transaction History</h3>
               </div>
-              <TransactionTable transactions={transactions} />
+              <TransactionTable 
+                transactions={transactions} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             </div>
           </div>
         )}
 
         <AddTransactionModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)} 
-          onSuccess={handleTransactionAdded}
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onSuccess={handleTransactionSaved}
+          transactionToEdit={editingTransaction}
         />
       </main>
     </div>

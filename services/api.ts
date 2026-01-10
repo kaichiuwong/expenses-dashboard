@@ -1,8 +1,8 @@
 import { TransactionResponse, CategoryResponse, CreateTransactionPayload } from '../types';
 
 // Default constants
-const DEFAULT_BASE_URL = '';
-const DEFAULT_API_KEY = '';
+const DEFAULT_BASE_URL = 'https://rcwxnpbxhuvhnnwcijga.supabase.co/functions/v1';
+const DEFAULT_API_KEY = 'sb_publishable_DzJJTqmieYKyofXX1GuCrA_KZuJuRnY';
 
 let envBaseUrl = '';
 let envApiKey = '';
@@ -93,5 +93,34 @@ export const addTransaction = async (data: CreateTransactionPayload['transaction
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error adding transaction: ${errorText || response.statusText}`);
+  }
+};
+
+export const updateTransaction = async (id: string, data: CreateTransactionPayload['transaction']): Promise<void> => {
+  const url = `${BASE_URL}/transaction/${id}`;
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ transaction: data }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error updating transaction: ${errorText || response.statusText}`);
+  }
+};
+
+export const deleteTransaction = async (id: string): Promise<void> => {
+  const url = `${BASE_URL}/transaction/${id}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error deleting transaction: ${errorText || response.statusText}`);
   }
 };
