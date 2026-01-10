@@ -33,11 +33,13 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
   const [data, setData] = useState<YearlySummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeMonthIndex, setActiveMonthIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const loadYearlyData = async () => {
       setLoading(true);
       setError(null);
+      setActiveMonthIndex(null); // Reset selection on year change
       try {
         const result = await fetchYearlySummary(year);
         setData(result);
@@ -62,15 +64,57 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
     }));
   }, [data]);
 
+  // Create a stable color map for categories so they don't change colors when switching between yearly/monthly views
+  const categoryColorMap = useMemo(() => {
+    if (!data) return {};
+    const map: Record<string, string> = {};
+    data.yearly_expenses_by_category.forEach((c, index) => {
+      map[c.category_name] = COLORS[index % COLORS.length];
+    });
+    return map;
+  }, [data]);
+
   const pieData = useMemo(() => {
     if (!data) return [];
-    return data.yearly_expenses_by_category.map((c, index) => ({
+    
+    let sourceCategories;
+    let savingsAmount;
+
+    // Determine if we are showing yearly data or specific month data
+    if (activeMonthIndex !== null && data.monthly_breakdown[activeMonthIndex]) {
+        const monthData = data.monthly_breakdown[activeMonthIndex];
+        sourceCategories = monthData.expenses_by_category;
+        savingsAmount = monthData.total_savings;
+    } else {
+        sourceCategories = data.yearly_expenses_by_category;
+        savingsAmount = data.yearly_total_savings;
+    }
+    
+    // Map categories to chart data
+    const items = sourceCategories.map((c, index) => ({
       name: c.category_name,
       value: c.total,
-      percentage: c.percentage,
-      color: COLORS[index % COLORS.length]
+      // Use consistent color from yearly map, fallback to index if new category found
+      color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+    }));
+
+    // Add Savings if positive
+    if (savingsAmount > 0) {
+      items.push({
+        name: 'SAVINGS',
+        value: savingsAmount,
+        color: '#10b981' // Explicit green for savings
+      });
+    }
+
+    // Calculate total value (should approx equal Income if savings included)
+    const totalValue = items.reduce((sum, item) => sum + item.value, 0);
+
+    return items.map(item => ({
+      ...item,
+      percentage: totalValue > 0 ? (item.value / totalValue) * 100 : 0
     })).sort((a, b) => b.value - a.value);
-  }, [data]);
+  }, [data, activeMonthIndex, categoryColorMap]);
 
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -93,6 +137,13 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setYear(e.target.value);
   };
+
+  const pieChartTitle = useMemo(() => {
+    if (activeMonthIndex !== null && data?.monthly_breakdown[activeMonthIndex]) {
+        return `Income Allocation: ${data.monthly_breakdown[activeMonthIndex].month}`;
+    }
+    return `Income Allocation (${year})`;
+  }, [activeMonthIndex, data, year]);
 
   if (error) {
     return (
@@ -175,10 +226,26 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Monthly Trend Bar Chart */}
             <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Monthly Income vs Expenses</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Monthly Income vs Expenses</h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                   Hover to filter categories
+                </span>
+              </div>
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <BarChart 
+                    data={chartData} 
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    onMouseMove={(state: any) => {
+                      if (state.isTooltipActive && state.activeTooltipIndex !== undefined) {
+                        setActiveMonthIndex(state.activeTooltipIndex);
+                      } else {
+                        setActiveMonthIndex(null);
+                      }
+                    }}
+                    onMouseLeave={() => setActiveMonthIndex(null)}
+                  >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="month" tickFormatter={(val) => val.split('-')[1]} stroke="#94a3b8" />
                     <YAxis stroke="#94a3b8" tickFormatter={(val) => `$${val}`} />
@@ -195,9 +262,11 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
             </div>
 
              {/* Yearly Category Pie Chart */}
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Expenses by Category</h3>
-              <div className="h-80 w-full">
+             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={pieChartTitle}>
+                {pieChartTitle}
+              </h3>
+              <div className="flex-1 min-h-[320px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -224,7 +293,15 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
                       layout="vertical" 
                       verticalAlign="bottom" 
                       align="center"
-                      wrapperStyle={{ maxHeight: '100px', overflowY: 'auto' }}
+                      wrapperStyle={{ maxHeight: '160px', overflowY: 'auto', width: '100%' }}
+                      formatter={(value, entry: any) => {
+                        const { percentage } = entry.payload;
+                        return (
+                          <span className="text-slate-600 dark:text-slate-300 font-medium ml-1">
+                            {value} <span className="text-slate-500 dark:text-slate-400">({percentage.toFixed(1)}%)</span>
+                          </span>
+                        );
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
