@@ -1,11 +1,54 @@
-<div align="center">
+# Expenses Dashboard
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A comprehensive financial dashboard visualizing monthly expenses by category, date, and weekday using interactive charts. Built with React, Tailwind CSS, and Recharts.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Dashboard**: Visualizes total expenses, category breakdown, and spending trends.
+- **Interactive Charts**: Area charts for daily trends, Pie charts for categories, and Bar charts for weekly analysis.
+- **Dark Mode**: Fully supported dark mode that respects system preferences by default.
+- **Responsive**: Optimized for mobile and desktop viewing.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Deployment on Vercel
 
-</div>
+This application is ready to be deployed on [Vercel](https://vercel.com).
+
+### Prerequisites
+
+- A Vercel account.
+- The Supabase API Key (if you are using your own backend) or the provided demo key.
+
+### Steps to Deploy
+
+1.  **Push to Git**: Ensure your code is pushed to a Git repository (GitHub, GitLab, or Bitbucket).
+2.  **Import Project**: Log in to Vercel and click "Add New..." -> "Project". Select your repository.
+3.  **Configure Project**:
+    *   **Framework Preset**: Create React App (or Vite, depending on your build setup. If standard React, 'Create React App' is fine. If using the provided simple setup, Vercel usually detects it automatically).
+    *   **Root Directory**: `./`
+4.  **Environment Variables**:
+    Expand the "Environment Variables" section and add the following:
+    
+    *   `REACT_APP_SUPABASE_KEY`: `your_supabase_api_key_here`
+    
+    *(Note: If you are using the demo key provided in the source code, this step is optional as the code has a fallback, but it is best practice to set it in the environment).*
+
+5.  **Deploy**: Click "Deploy". Vercel will build and launch your application.
+
+### Environment Variables
+
+| Variable | Description |
+| :--- | :--- |
+| `REACT_APP_SUPABASE_KEY` | The API Key for the Supabase Function to retrieve transaction data. |
+
+## Local Development
+
+1.  Clone the repository.
+2.  Install dependencies (if using a package manager like npm/yarn - though this specific demo uses ESM imports via CDN for simplicity).
+3.  Serve the file (e.g., using `npx serve` or Live Server).
+
+## Tech Stack
+
+- **React**: UI Library
+- **Tailwind CSS**: Styling (Dark mode supported via `class` strategy)
+- **Recharts**: Data Visualization
+- **Supabase**: Backend Functions (API)

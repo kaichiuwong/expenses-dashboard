@@ -1,0 +1,5 @@
+{
+  "name": "Expenses Dashboard",
+  "description": "A comprehensive financial dashboard visualizing monthly expenses by category, date, and weekday using interactive charts.",
+  "requestFramePermissions": []
+}
