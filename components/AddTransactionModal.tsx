@@ -11,9 +11,37 @@ interface AddTransactionModalProps {
 
 type TransactionType = 'expense' | 'income';
 
-const CURRENCIES = [
-  'AUD', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'NZD', 'SGD', 'CNY', 'INR', 'HKD'
-];
+const CURRENCY_OPTIONS = [
+  { code: 'AUD', flag: '🇦🇺', name: 'Australian Dollar' },
+  { code: 'BGN', flag: '🇧🇬', name: 'Bulgarian Lev' },
+  { code: 'CAD', flag: '🇨🇦', name: 'Canadian Dollar' },
+  { code: 'CHF', flag: '🇨🇭', name: 'Swiss Franc' },
+  { code: 'CNY', flag: '🇨🇳', name: 'Chinese Yuan' },
+  { code: 'CZK', flag: '🇨🇿', name: 'Czech Koruna' },
+  { code: 'DKK', flag: '🇩🇰', name: 'Danish Krone' },
+  { code: 'EUR', flag: '🇪🇺', name: 'Euro' },
+  { code: 'GBP', flag: '🇬🇧', name: 'British Pound' },
+  { code: 'HKD', flag: '🇭🇰', name: 'Hong Kong Dollar' },
+  { code: 'HUF', flag: '🇭🇺', name: 'Hungarian Forint' },
+  { code: 'IDR', flag: '🇮🇩', name: 'Indonesian Rupiah' },
+  { code: 'INR', flag: '🇮🇳', name: 'Indian Rupee' },
+  { code: 'ISK', flag: '🇮🇸', name: 'Icelandic Króna' },
+  { code: 'JPY', flag: '🇯🇵', name: 'Japanese Yen' },
+  { code: 'KRW', flag: '🇰🇷', name: 'South Korean Won' },
+  { code: 'MYR', flag: '🇲🇾', name: 'Malaysian Ringgit' },
+  { code: 'NOK', flag: '🇳🇴', name: 'Norwegian Krone' },
+  { code: 'NZD', flag: '🇳🇿', name: 'New Zealand Dollar' },
+  { code: 'PHP', flag: '🇵🇭', name: 'Philippine Peso' },
+  { code: 'PLN', flag: '🇵🇱', name: 'Polish Złoty' },
+  { code: 'RON', flag: '🇷🇴', name: 'Romanian Leu' },
+  { code: 'SEK', flag: '🇸🇪', name: 'Swedish Krona' },
+  { code: 'SGD', flag: '🇸🇬', name: 'Singapore Dollar' },
+  { code: 'THB', flag: '🇹🇭', name: 'Thai Baht' },
+  { code: 'TRY', flag: '🇹🇷', name: 'Turkish Lira' },
+  { code: 'TWD', flag: '🇹🇼', name: 'New Taiwan Dollar' },
+  { code: 'USD', flag: '🇺🇸', name: 'US Dollar' },
+  { code: 'VND', flag: '🇻🇳', name: 'Vietnamese Đồng' },
+].sort((a, b) => a.code.localeCompare(b.code));
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
   isOpen, 
@@ -296,8 +324,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 onChange={(e) => setCurrency(e.target.value)}
                 className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
               >
-                {CURRENCIES.map(curr => (
-                  <option key={curr} value={curr}>{curr}</option>
+                {CURRENCY_OPTIONS.map(opt => (
+                  <option key={opt.code} value={opt.code}>{opt.flag} {opt.code}</option>
                 ))}
               </select>
             </div>
