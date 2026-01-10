@@ -14,6 +14,7 @@ import {
 import { SummaryCard } from './components/SummaryCard';
 import { TransactionTable } from './components/TransactionTable';
 import { AddTransactionModal } from './components/AddTransactionModal';
+import { BulkImportModal } from './components/BulkImportModal';
 import { useTheme } from './hooks/useTheme';
 
 // Icons
@@ -35,6 +36,9 @@ const MoonIcon = () => (
 const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
 );
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+);
 
 const App: React.FC = () => {
   const [month, setMonth] = useState('2026-01');
@@ -42,6 +46,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
   const { theme, toggleTheme } = useTheme();
@@ -85,6 +90,10 @@ const App: React.FC = () => {
   const openAddModal = () => {
     setEditingTransaction(null);
     setIsModalOpen(true);
+  };
+
+  const openBulkModal = () => {
+    setIsBulkModalOpen(true);
   };
 
   const handleEdit = (transaction: Transaction) => {
@@ -136,6 +145,22 @@ const App: React.FC = () => {
               />
             </div>
             
+            <button
+              onClick={openBulkModal}
+              className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+              title="Import Regular Transactions"
+            >
+              <DownloadIcon />
+              Import
+            </button>
+            <button
+              onClick={openBulkModal}
+              className="sm:hidden flex items-center justify-center bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 p-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+              aria-label="Import Regular Transactions"
+            >
+              <DownloadIcon />
+            </button>
+
             <button
               onClick={openAddModal}
               className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
@@ -383,6 +408,13 @@ const App: React.FC = () => {
           onClose={() => setIsModalOpen(false)} 
           onSuccess={handleTransactionSaved}
           transactionToEdit={editingTransaction}
+        />
+
+        <BulkImportModal 
+          isOpen={isBulkModalOpen}
+          onClose={() => setIsBulkModalOpen(false)}
+          onSuccess={handleTransactionSaved}
+          targetMonth={month}
         />
       </main>
     </div>

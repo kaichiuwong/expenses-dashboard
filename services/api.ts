@@ -1,4 +1,10 @@
-import { TransactionResponse, CategoryResponse, CreateTransactionPayload } from '../types';
+import { 
+  TransactionResponse, 
+  CategoryResponse, 
+  CreateTransactionPayload, 
+  RegularTransactionResponse,
+  BulkCreateTransactionPayload
+} from '../types';
 
 // Default constants
 const DEFAULT_BASE_URL = 'https://rcwxnpbxhuvhnnwcijga.supabase.co/functions/v1';
@@ -81,6 +87,21 @@ export const fetchCategories = async (): Promise<CategoryResponse> => {
   return response.json();
 };
 
+export const fetchRegularTransactions = async (): Promise<RegularTransactionResponse> => {
+  const url = `${BASE_URL}/regular`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching regular transactions: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
 export const addTransaction = async (data: CreateTransactionPayload['transaction']): Promise<void> => {
   const url = `${BASE_URL}/transaction`;
 
@@ -93,6 +114,21 @@ export const addTransaction = async (data: CreateTransactionPayload['transaction
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error adding transaction: ${errorText || response.statusText}`);
+  }
+};
+
+export const addBulkTransactions = async (data: BulkCreateTransactionPayload['transaction']): Promise<void> => {
+  const url = `${BASE_URL}/transaction`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ transaction: data }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error importing transactions: ${errorText || response.statusText}`);
   }
 };
 
