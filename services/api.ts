@@ -1,22 +1,49 @@
 import { TransactionResponse, CategoryResponse, CreateTransactionPayload } from '../types';
 
-// Safely access environment variables to prevent "process is not defined" errors in browser
-const getEnv = (key: string) => {
-  try {
-    // Check for standard Node/CRA process.env
-    if (typeof process !== 'undefined' && process.env) {
-      return process.env[key];
-    }
-    // Fallback for Vite if it replaces import.meta.env but we can't rely on it being there in all setups
-    // (Note: In a pure Vite setup, you should use import.meta.env.VITE_...)
-  } catch (e) {
-    // ignore
-  }
-  return '';
-};
+// Default constants
+const DEFAULT_BASE_URL = '';
+const DEFAULT_API_KEY = '';
 
-const BASE_URL = getEnv('REACT_APP_API_BASE_URL') || '';
-const API_KEY = getEnv('REACT_APP_SUPABASE_KEY') || '';
+let envBaseUrl = '';
+let envApiKey = '';
+
+// Attempt to retrieve environment variables using explicit access for static analysis by bundlers.
+// We try both import.meta.env (Vite) and process.env (Webpack/CRA).
+// We also check for both VITE_ and REACT_APP_ prefixes to be compatible with different setups.
+
+try {
+  // Check Vite / Modern ESM
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    // @ts-ignore
+    envBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.REACT_APP_API_BASE_URL;
+    // @ts-ignore
+    envApiKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.REACT_APP_SUPABASE_KEY;
+  }
+} catch (e) {
+  // Ignore errors accessing import.meta
+}
+
+try {
+  // Check Node / Webpack / CRA
+  // explicit check for process to avoid ReferenceError in browsers
+  if (typeof process !== 'undefined' && process.env) {
+    // We must access properties directly (dot notation) for DefinePlugin/replacement to work
+    // Dynamic access like process.env[key] will NOT work in most bundlers
+    if (!envBaseUrl) {
+        envBaseUrl = process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_BASE_URL || '';
+    }
+    if (!envApiKey) {
+        envApiKey = process.env.REACT_APP_SUPABASE_KEY || process.env.VITE_SUPABASE_KEY || '';
+    }
+  }
+} catch (e) {
+  // Ignore errors accessing process
+}
+
+// Fallback to defaults if no env vars found
+const BASE_URL = envBaseUrl || DEFAULT_BASE_URL;
+const API_KEY = envApiKey || DEFAULT_API_KEY;
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
