@@ -72,7 +72,25 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
     })).sort((a, b) => b.value - a.value);
   }, [data]);
 
-  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    // Create a range of years, e.g., 5 years back and 2 years forward
+    const years = [];
+    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
+        years.push(i);
+    }
+    
+    // Ensure the current selected year is included if it's outside the range
+    const selectedYearInt = parseInt(year);
+    if (!isNaN(selectedYearInt) && !years.includes(selectedYearInt)) {
+        years.push(selectedYearInt);
+    }
+    
+    // Sort descending
+    return years.sort((a, b) => b - a);
+  }, [year]);
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setYear(e.target.value);
   };
 
@@ -99,13 +117,16 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
         <h2 className="text-lg font-bold text-slate-800 dark:text-white">Yearly Overview: {year}</h2>
         <div className="flex items-center gap-2">
             <label htmlFor="year-select" className="text-sm font-medium text-slate-600 dark:text-slate-300">Select Year:</label>
-            <input 
-              type="number" 
+            <select 
               id="year-select"
               value={year}
               onChange={handleYearChange}
-              className="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-3 py-1.5 text-sm w-24 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-            />
+              className="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-3 py-1.5 text-sm w-32 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer"
+            >
+                {availableYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                ))}
+            </select>
         </div>
       </div>
 
