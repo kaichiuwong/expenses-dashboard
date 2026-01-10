@@ -165,7 +165,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         <div className="text-xs text-slate-500 dark:text-slate-400 uppercase">{t.category.name}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                         <span className="text-xs text-slate-400 font-medium">Amount:</span>
+                         <span className="text-xs text-slate-400 font-medium">Amount {t.ccy ? `(${t.ccy})` : ''}:</span>
                          <input 
                             type="number" 
                             step="0.01"

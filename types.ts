@@ -36,6 +36,7 @@ export interface RegularTransaction {
   category: Category;
   name: string;
   amount: number;
+  ccy: string;
   created_at: string;
   updated_at: string;
 }
@@ -49,6 +50,7 @@ export interface CreateRegularTransactionPayload {
     category_name: string;
     name: string;
     amount: number;
+    ccy: string;
   };
 }
 

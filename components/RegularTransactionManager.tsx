@@ -115,7 +115,8 @@ export const RegularTransactionManager: React.FC = () => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-100">
-                                    ${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    <span className="text-xs text-slate-400 font-normal mr-1">{t.ccy}</span>
+                                    {t.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
