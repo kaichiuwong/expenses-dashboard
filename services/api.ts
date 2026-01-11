@@ -219,7 +219,7 @@ export const deleteRegularTransaction = async (id: string): Promise<void> => {
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
-export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string } }> => {
+export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string }; message?: string }> => {
   const url = `${BASE_URL}/check-user-email`;
   // Body removed as email is now read from JWT
   const response = await fetch(url, { method: 'POST', headers: await getHeaders(email) });

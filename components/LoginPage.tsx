@@ -48,7 +48,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setFoundUser(response.user);
         setStep('passkey');
       } else {
-        setError('Access denied. User not found.');
+        setError(response.message || 'Access denied. User not found.');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to check user');
