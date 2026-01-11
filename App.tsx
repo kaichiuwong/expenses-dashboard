@@ -169,16 +169,15 @@ const App: React.FC = () => {
   }, [month, income, expense, targetSavings]);
 
   const availableYears = useMemo(() => {
-    const currentYear = new Date().getFullYear();
     const years = [];
-    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
+    for (let i = 2024; i <= 2030; i++) {
         years.push(i);
     }
     const selectedYearInt = parseInt(year);
     if (!isNaN(selectedYearInt) && !years.includes(selectedYearInt)) {
         years.push(selectedYearInt);
     }
-    return years.sort((a, b) => b - a);
+    return years.sort((a, b) => a - b);
   }, [year]);
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
