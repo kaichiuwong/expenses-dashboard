@@ -195,5 +195,36 @@ export const verifyPasskeyLogin = async (email: string, credential: any): Promis
   return verifyRes.json();
 };
 
+export const getRegistrationOptions = async (email: string): Promise<any> => {
+  const url = `${BASE_URL}/reg-options`;
+  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  return response.json();
+};
+
+export const verifyPasskeyRegistration = async (email: string, credential: any): Promise<{ user: { id: string; email: string } }> => {
+  const url = `${BASE_URL}/reg-verify`;
+  
+  const attestation = credential as PublicKeyCredential;
+  const response = attestation.response as AuthenticatorAttestationResponse;
+
+  const payload = {
+    email,
+    credential: {
+      id: attestation.id,
+      rawId: bufferToBase64URL(attestation.rawId),
+      response: {
+        attestationObject: bufferToBase64URL(response.attestationObject),
+        clientDataJSON: bufferToBase64URL(response.clientDataJSON),
+      },
+      type: attestation.type,
+    }
+  };
+
+  const verifyRes = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+  if (!verifyRes.ok) throw new Error(await verifyRes.text() || verifyRes.statusText);
+  return verifyRes.json();
+};
+
 // Export base64URLToBuffer for component usage if needed (e.g. converting challenge)
 export { base64URLToBuffer };

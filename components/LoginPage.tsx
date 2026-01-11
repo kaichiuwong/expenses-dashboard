@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { checkUserEmail, getPasskeyOptions, verifyPasskeyLogin, base64URLToBuffer } from '../services/api';
+import { 
+  checkUserEmail, 
+  getPasskeyOptions, 
+  verifyPasskeyLogin, 
+  getRegistrationOptions,
+  verifyPasskeyRegistration,
+  base64URLToBuffer 
+} from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 
 interface LoginPageProps {
@@ -17,6 +24,9 @@ const FingerprintIcon = () => (
 );
 const BackIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+);
+const PlusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
 );
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -43,8 +53,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           const options = await getPasskeyOptions(email);
           setPasskeyOptions(options);
         } catch (err: any) {
-          console.error("Failed to fetch passkey options", err);
-          setError("Failed to initialize passkey login. Please try again.");
+          console.warn("Failed to fetch login options, user might not have passkeys yet.", err);
+          // We do NOT set a blocking error here, because we want to allow the "Create Passkey" button to be clickable.
+          // setError("No passkeys found."); 
         } finally {
           setIsPreparingPasskey(false);
         }
@@ -110,6 +121,49 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       setError(err.message || 'Passkey verification failed.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasskeyRegistration = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Get Registration Options
+      const options = await getRegistrationOptions(email);
+      
+      // Decode options for browser
+      const publicKey: any = {
+        ...options,
+        challenge: base64URLToBuffer(options.challenge),
+        user: {
+            ...options.user,
+            id: base64URLToBuffer(options.user.id)
+        }
+      };
+      
+      if (options.excludeCredentials) {
+        publicKey.excludeCredentials = options.excludeCredentials.map((c: any) => ({
+             ...c,
+             id: base64URLToBuffer(c.id)
+        }));
+      }
+
+      // 2. Create Credential
+      const credential = await navigator.credentials.create({ publicKey });
+      if (!credential) throw new Error('Registration cancelled.');
+
+      // 3. Verify Registration
+      const result = await verifyPasskeyRegistration(email, credential);
+
+      // 4. Login
+      onLogin(result.user || foundUser);
+
+    } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'Passkey creation failed.');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -225,9 +279,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                         disabled={isLoading || isPreparingPasskey || !passkeyOptions}
                         className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                        {isLoading ? 'Verifying...' : isPreparingPasskey ? 'Preparing...' : 'Authenticate with Passkey'}
+                        {isLoading && !isPreparingPasskey ? 'Verifying...' : isPreparingPasskey ? 'Preparing...' : 'Authenticate with Passkey'}
                     </button>
                     
+                    <button
+                        onClick={handlePasskeyRegistration}
+                        disabled={isLoading}
+                        className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-sm text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    >
+                        <PlusIcon />
+                        First time? Create Passkey
+                    </button>
+
                     <button
                         onClick={handleReset}
                         disabled={isLoading}
