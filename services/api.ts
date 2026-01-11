@@ -285,6 +285,33 @@ export const deleteRegularTransaction = async (id: string): Promise<void> => {
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
+// --- Category API Functions ---
+
+export const fetchCategories = async (): Promise<CategoryResponse> => {
+  const url = `${BASE_URL}/category`;
+  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  return response.json();
+};
+
+export const addCategory = async (name: string): Promise<void> => {
+  const url = `${BASE_URL}/category`;
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ category: { name } }) });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+};
+
+export const updateCategory = async (id: string, name: string): Promise<void> => {
+  const url = `${BASE_URL}/category/${id}`;
+  const response = await fetch(url, { method: 'PUT', headers: await getHeaders(), body: JSON.stringify({ category: { name } }) });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+};
+
+export const deleteCategory = async (id: string): Promise<void> => {
+  const url = `${BASE_URL}/category/${id}`;
+  const response = await fetch(url, { method: 'DELETE', headers: await getHeaders() });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+};
+
 export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string }; message?: string }> => {
   const url = `${BASE_URL}/check-user-email`;
   // Body removed as email is now read from JWT

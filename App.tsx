@@ -18,6 +18,8 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { YearlyDashboard } from './components/YearlyDashboard';
 import { RegularTransactionManager } from './components/RegularTransactionManager';
 import { AddRegularTransactionModal } from './components/AddRegularTransactionModal';
+import { CategoryManager } from './components/CategoryManager';
+import { AddCategoryModal } from './components/AddCategoryModal';
 import { LoginPage } from './components/LoginPage';
 import { useTheme } from './hooks/useTheme';
 
@@ -52,6 +54,9 @@ const ChartIcon = () => (
 const TemplatesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 );
+const FolderIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+);
 const ChevronLeftIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
 );
@@ -66,7 +71,7 @@ const LogoutIcon = () => (
 );
 
 const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogout }) => {
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular'>('monthly');
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories'>('monthly');
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -81,6 +86,11 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   const [isRegularModalOpen, setIsRegularModalOpen] = useState(false);
   const [editingRegularTransaction, setEditingRegularTransaction] = useState<RegularTransaction | null>(null);
   const [regularRefreshTrigger, setRegularRefreshTrigger] = useState(0);
+
+  // Category State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
+  const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,11 +253,19 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       setRegularRefreshTrigger(prev => prev + 1);
   };
 
+  // Category Handlers
+  const handleCategoryEdit = (category: { id: string; name: string }) => {
+    setEditingCategory(category);
+    setIsCategoryModalOpen(true);
+  };
 
-  // Chart Styling based on theme
+  const handleCategorySuccess = () => {
+    setCategoryRefreshTrigger(prev => prev + 1);
+  };
+
   const chartColors = {
-    grid: theme === 'dark' ? '#334155' : '#f1f5f9',
     text: theme === 'dark' ? '#94a3b8' : '#64748b',
+    grid: theme === 'dark' ? '#334155' : '#e2e8f0',
     tooltipBg: theme === 'dark' ? '#1e293b' : '#ffffff',
     tooltipText: theme === 'dark' ? '#f8fafc' : '#1e293b',
     areaGradientStart: theme === 'dark' ? '#818cf8' : '#6366f1',
@@ -287,6 +305,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
           >
             <TemplatesIcon />
             Templates
+          </button>
+          <button 
+            onClick={() => setViewMode('categories')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'categories' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <FolderIcon />
+            Categories
           </button>
         </nav>
 
@@ -339,6 +364,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
            <div className="flex items-center">
                 {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Overview</h2>}
                 {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Regular Transactions (Templates)</h2>}
+                {viewMode === 'categories' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Manage Categories</h2>}
            </div>
 
            <div className="flex items-center gap-2 sm:gap-3">
@@ -462,6 +488,30 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                     </button>
                   </>
               )}
+
+              {viewMode === 'categories' && (
+                  <>
+                    <button
+                        onClick={() => {
+                            setEditingCategory(null);
+                            setIsCategoryModalOpen(true);
+                        }}
+                        className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                    >
+                        <PlusIcon />
+                        Add Category
+                    </button>
+                    <button
+                        onClick={() => {
+                            setEditingCategory(null);
+                            setIsCategoryModalOpen(true);
+                        }}
+                        className="sm:hidden p-2 bg-indigo-600 text-white rounded-md shadow-sm"
+                    >
+                        <PlusIcon />
+                    </button>
+                  </>
+              )}
            </div>
         </header>
 
@@ -475,6 +525,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
               <RegularTransactionManager 
                 onEdit={handleRegularEdit} 
                 refreshTrigger={regularRefreshTrigger}
+              />
+            )}
+
+            {viewMode === 'categories' && (
+              <CategoryManager 
+                onEdit={handleCategoryEdit} 
+                refreshTrigger={categoryRefreshTrigger}
               />
             )}
 
@@ -731,6 +788,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         transactionToEdit={editingRegularTransaction}
       />
 
+      <AddCategoryModal 
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSuccess={handleCategorySuccess}
+        categoryToEdit={editingCategory}
+      />
+
       {/* --- Mobile Bottom Navigation --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center z-30 pb-safe">
          <button 
@@ -753,6 +817,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
          >
             <TemplatesIcon />
             <span className="text-[10px] font-medium">Templates</span>
+         </button>
+         <button 
+           onClick={() => setViewMode('categories')}
+           className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${viewMode === 'categories' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}
+         >
+            <FolderIcon />
+            <span className="text-[10px] font-medium">Categories</span>
          </button>
       </nav>
     </div>
