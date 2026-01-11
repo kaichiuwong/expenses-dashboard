@@ -223,7 +223,19 @@ export const checkUserEmail = async (email: string): Promise<{ exists: boolean; 
   const url = `${BASE_URL}/check-user-email`;
   // Body removed as email is now read from JWT
   const response = await fetch(url, { method: 'POST', headers: await getHeaders(email) });
-  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      // Try to parse JSON error message from backend
+      const json = JSON.parse(text);
+      if (json && json.message) {
+        throw new Error(json.message);
+      }
+    } catch (e) {
+      // If parsing fails, ignore and throw raw text below
+    }
+    throw new Error(text || response.statusText);
+  }
   return response.json();
 };
 
