@@ -50,6 +50,12 @@ const ChartIcon = () => (
 const TemplatesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 );
+const ChevronLeftIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+);
+const ChevronRightIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+);
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular'>('monthly');
@@ -148,6 +154,16 @@ const App: React.FC = () => {
     setMonth(e.target.value);
   };
 
+  const navigateMonth = (direction: number) => {
+    const [y, m] = month.split('-').map(Number);
+    // Javascript month is 0-indexed. Current input is 1-indexed.
+    // subtract 1 to get JS month, add direction, and let Date object handle overflow/underflow
+    const newDate = new Date(y, m - 1 + direction, 1);
+    const newYear = newDate.getFullYear();
+    const newMonth = String(newDate.getMonth() + 1).padStart(2, '0');
+    setMonth(`${newYear}-${newMonth}`);
+  };
+
   const handleTransactionSaved = () => {
     loadData();
   };
@@ -185,12 +201,6 @@ const App: React.FC = () => {
     tooltipText: theme === 'dark' ? '#f8fafc' : '#1e293b',
     areaGradientStart: theme === 'dark' ? '#818cf8' : '#6366f1',
     areaStroke: theme === 'dark' ? '#818cf8' : '#6366f1',
-  };
-
-  const getTitle = () => {
-    if (viewMode === 'monthly') return 'Monthly Dashboard';
-    if (viewMode === 'yearly') return 'Yearly Analytics';
-    return 'Templates';
   };
 
   return (
@@ -259,18 +269,33 @@ const App: React.FC = () => {
       {/* --- Main Content Area --- */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Context Header (Desktop & Mobile) */}
-        <header className="h-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 sticky top-0">
-           <h2 className="text-xl font-bold text-slate-800 dark:text-white truncate mr-2">{getTitle()}</h2>
-           
+        <header className="h-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-end px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 sticky top-0">
            <div className="flex items-center gap-2 sm:gap-3">
               {viewMode === 'monthly' && (
                 <>
-                  <input 
-                    type="month" 
-                    value={month} 
-                    onChange={handleMonthChange}
-                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-2 py-1.5 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-colors"
-                  />
+                  <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm">
+                    <button
+                      onClick={() => navigateMonth(-1)}
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-l-md transition-colors border-r border-slate-200 dark:border-slate-700"
+                      title="Previous Month"
+                    >
+                      <ChevronLeftIcon />
+                    </button>
+                    <input 
+                      type="month" 
+                      value={month} 
+                      onChange={handleMonthChange}
+                      className="bg-transparent text-slate-900 dark:text-white px-2 py-1.5 text-xs sm:text-sm outline-none border-none min-w-[120px]"
+                    />
+                    <button
+                      onClick={() => navigateMonth(1)}
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-r-md transition-colors border-l border-slate-200 dark:border-slate-700"
+                      title="Next Month"
+                    >
+                      <ChevronRightIcon />
+                    </button>
+                  </div>
+
                   <button
                     onClick={openBulkModal}
                     className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
