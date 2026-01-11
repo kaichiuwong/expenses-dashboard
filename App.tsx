@@ -18,6 +18,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { YearlyDashboard } from './components/YearlyDashboard';
 import { RegularTransactionManager } from './components/RegularTransactionManager';
 import { AddRegularTransactionModal } from './components/AddRegularTransactionModal';
+import { LoginPage } from './components/LoginPage';
 import { useTheme } from './hooks/useTheme';
 
 // --- Icons ---
@@ -60,8 +61,11 @@ const ChevronRightIcon = () => (
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 );
+const LogoutIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+);
 
-const App: React.FC = () => {
+const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogout }) => {
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular'>('monthly');
   const [month, setMonth] = useState(() => {
     const now = new Date();
@@ -286,13 +290,20 @@ const App: React.FC = () => {
           </button>
         </nav>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
            <button 
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
               <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+            <button 
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogoutIcon />
+              <span>Sign Out</span>
             </button>
         </div>
       </aside>
@@ -305,12 +316,20 @@ const App: React.FC = () => {
             </div>
             <span className="font-bold text-slate-900 dark:text-white">Expensify</span>
           </div>
-          <button 
-            onClick={toggleTheme}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+                onClick={toggleTheme}
+                className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+            >
+                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <button 
+                onClick={onLogout}
+                className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+            >
+                <LogoutIcon />
+            </button>
+          </div>
       </header>
 
       {/* --- Main Content Area --- */}
@@ -738,6 +757,33 @@ const App: React.FC = () => {
       </nav>
     </div>
   );
+};
+
+const App: React.FC = () => {
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = (userData: any) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  if (!user) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  return <Dashboard user={user} onLogout={handleLogout} />;
 };
 
 export default App;

@@ -250,3 +250,20 @@ export const deleteRegularTransaction = async (id: string): Promise<void> => {
     throw new Error(`Error deleting regular transaction: ${errorText || response.statusText}`);
   }
 };
+
+export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string } }> => {
+  const url = `${BASE_URL}/check-user-email`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error checking user: ${errorText || response.statusText}`);
+  }
+
+  return response.json();
+};
