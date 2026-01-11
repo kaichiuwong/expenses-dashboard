@@ -48,6 +48,7 @@ const JWT_SECRET = envJwtSecret || 'my-secret-key';
 
 const textEncoder = new TextEncoder();
 
+// Base64Url encode for JWT parts
 const base64UrlEncode = (data: Uint8Array | string): string => {
     let base64 = '';
     if (typeof data === 'string') {
@@ -59,19 +60,85 @@ const base64UrlEncode = (data: Uint8Array | string): string => {
     return base64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 };
 
+// Standard Base64 encode for encrypted data (no URL replacements)
+const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+};
+
+// Convert string to exact 32 bytes for AES-256
+const stringTo32Bytes = (str: string): ArrayBuffer => {
+    const data = textEncoder.encode(str);
+    const keyData = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+        keyData[i] = i < data.length ? data[i] : 0;
+    }
+    return keyData.buffer;
+};
+
+// Encrypt data using AES-GCM
+const encryptData = async (data: any, secret: string) => {
+    const dataBuffer = textEncoder.encode(JSON.stringify(data));
+    
+    // Generate random IV (12 bytes for GCM)
+    const iv = new Uint8Array(12);
+    crypto.getRandomValues(iv);
+    
+    // Convert secret to exactly 32 bytes
+    const keyBuffer = stringTo32Bytes(secret);
+    
+    // Import key
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        keyBuffer,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+    );
+    
+    // Encrypt
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        keyMaterial,
+        dataBuffer
+    );
+    
+    return {
+        encrypted: arrayBufferToBase64(encrypted),
+        iv: arrayBufferToBase64(iv.buffer)
+    };
+};
+
 const generateJWT = async (email: string) => {
-    const header = { alg: "HS256", typ: "JWT" };
-    const payload = {
+    // 1. Encrypt the sensitive data
+    const dataToEncrypt = {
         email: email,
-        apikey: API_KEY,
+        apikey: API_KEY
+    };
+
+    const { encrypted, iv } = await encryptData(dataToEncrypt, JWT_SECRET);
+
+    // 2. JWT Header
+    const header = { alg: "HS256", typ: "JWT" };
+    
+    // 3. JWT Payload with encrypted data
+    const payload = {
+        data: encrypted,
+        iv: iv,
         exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiration
     };
 
+    // 4. Encode Header & Payload
     const encodedHeader = base64UrlEncode(JSON.stringify(header));
     const encodedPayload = base64UrlEncode(JSON.stringify(payload));
     const tokenData = `${encodedHeader}.${encodedPayload}`;
 
-    // Import the secret key for HMAC
+    // 5. Sign (HMAC SHA-256)
     const key = await crypto.subtle.importKey(
         'raw',
         textEncoder.encode(JWT_SECRET),
@@ -80,7 +147,6 @@ const generateJWT = async (email: string) => {
         ['sign']
     );
 
-    // Sign the data
     const signature = await crypto.subtle.sign('HMAC', key, textEncoder.encode(tokenData));
     const encodedSignature = base64UrlEncode(new Uint8Array(signature));
 
