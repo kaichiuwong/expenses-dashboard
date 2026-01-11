@@ -210,196 +210,198 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     : '$0.00';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 dark:border-slate-700">
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-            {isEditMode ? 'Edit Transaction' : 'Add New Transaction'}
-          </h3>
-          <button 
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm transition-opacity">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 dark:border-slate-700 relative">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+              {isEditMode ? 'Edit Transaction' : 'Add New Transaction'}
+            </h3>
+            <button 
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 text-sm p-3 rounded-lg">
-              {error}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 text-sm p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {/* Type Toggle */}
+            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1 mb-4">
+              <button
+                type="button"
+                onClick={() => setType('expense')}
+                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                  type === 'expense'
+                    ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                onClick={() => setType('income')}
+                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                  type === 'income'
+                    ? 'bg-white dark:bg-slate-600 text-green-600 dark:text-green-400 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Income
+              </button>
             </div>
-          )}
 
-          {/* Type Toggle */}
-          <div className="flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1 mb-4">
-            <button
-              type="button"
-              onClick={() => setType('expense')}
-              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                type === 'expense'
-                  ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              Expense
-            </button>
-            <button
-              type="button"
-              onClick={() => setType('income')}
-              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                type === 'income'
-                  ? 'bg-white dark:bg-slate-600 text-green-600 dark:text-green-400 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              Income
-            </button>
-          </div>
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Date
+              </label>
+              <input
+                type="date"
+                id="date"
+                required
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full appearance-none rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              id="date"
-              required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Category
-            </label>
-            <select
-              id="category"
-              required
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              disabled={isLoadingCategories}
-              className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none disabled:opacity-50"
-            >
-              {isLoadingCategories ? (
-                <option>Loading categories...</option>
-              ) : (
-                <>
-                  <option value="" disabled>Select a category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Description / Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              required
-              placeholder={type === 'income' ? 'e.g. Salary, Refund' : 'e.g. Lunch at Cafe'}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-5 gap-4">
-            <div className="col-span-2">
-               <label htmlFor="currency" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Currency
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Category
               </label>
               <select
-                id="currency"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
+                id="category"
+                required
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                disabled={isLoadingCategories}
+                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none disabled:opacity-50"
               >
-                {CURRENCY_OPTIONS.map(opt => (
-                  <option key={opt.code} value={opt.code}>{opt.flag} {opt.code}</option>
-                ))}
+                {isLoadingCategories ? (
+                  <option>Loading categories...</option>
+                ) : (
+                  <>
+                    <option value="" disabled>Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
-            <div className="col-span-3">
-              <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Amount
+
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Description / Name
               </label>
               <input
-                type="number"
-                id="amount"
+                type="text"
+                id="name"
                 required
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                placeholder={type === 'income' ? 'e.g. Salary, Refund' : 'e.g. Lunch at Cafe'}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="fxRate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-2">
-                FX Rate
-                {isLoadingFx && (
-                  <svg className="animate-spin h-3 w-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-              </label>
-              <input
-                type="number"
-                id="fxRate"
-                required
-                step="0.0001"
-                value={fxRate}
-                disabled={currency === 'AUD'}
-                onChange={(e) => setFxRate(e.target.value)}
-                className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                 Total (AUD)
-              </label>
-              <div className="w-full rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sm:text-sm px-3 py-2 border border-slate-200 dark:border-slate-700 font-medium">
-                {displayTotal}
+            <div className="grid grid-cols-5 gap-4">
+              <div className="col-span-2">
+                 <label htmlFor="currency" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Currency
+                </label>
+                <select
+                  id="currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
+                >
+                  {CURRENCY_OPTIONS.map(opt => (
+                    <option key={opt.code} value={opt.code}>{opt.flag} {opt.code}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-3">
+                <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none"
+                />
               </div>
             </div>
-          </div>
 
-          <div className="pt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isLoadingCategories || isLoadingFx}
-              className={`flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                type === 'income' 
-                  ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
-              }`}
-            >
-              {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add') + (type === 'income' ? ' Income' : ' Expense')}
-            </button>
-          </div>
-        </form>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="fxRate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-2">
+                  FX Rate
+                  {isLoadingFx && (
+                    <svg className="animate-spin h-3 w-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  id="fxRate"
+                  required
+                  step="0.0001"
+                  value={fxRate}
+                  disabled={currency === 'AUD'}
+                  onChange={(e) => setFxRate(e.target.value)}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border shadow-sm outline-none disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                   Total (AUD)
+                </label>
+                <div className="w-full rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sm:text-sm px-3 py-2 border border-slate-200 dark:border-slate-700 font-medium">
+                  {displayTotal}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || isLoadingCategories || isLoadingFx}
+                className={`flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  type === 'income' 
+                    ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+                }`}
+              >
+                {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add') + (type === 'income' ? ' Income' : ' Expense')}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
