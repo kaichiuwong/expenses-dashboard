@@ -287,13 +287,6 @@ export const deleteRegularTransaction = async (id: string): Promise<void> => {
 
 // --- Category API Functions ---
 
-export const fetchCategories = async (): Promise<CategoryResponse> => {
-  const url = `${BASE_URL}/category`;
-  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
-  if (!response.ok) throw new Error(await response.text() || response.statusText);
-  return response.json();
-};
-
 export const addCategory = async (name: string): Promise<void> => {
   const url = `${BASE_URL}/category`;
   const response = await fetch(url, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ category: { name } }) });
