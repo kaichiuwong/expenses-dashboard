@@ -8,12 +8,9 @@ import {
   CreateRegularTransactionPayload
 } from '../types';
 
-// Default constants
-const DEFAULT_BASE_URL = 'https://rcwxnpbxhuvhnnwcijga.supabase.co/functions/v1';
-const DEFAULT_API_KEY = 'sb_publishable_DzJJTqmieYKyofXX1GuCrA_KZuJuRnY';
-
 let envBaseUrl = '';
 let envApiKey = '';
+let envJwtSecret = '';
 
 try {
   // @ts-ignore
@@ -22,6 +19,8 @@ try {
     envBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.REACT_APP_API_BASE_URL;
     // @ts-ignore
     envApiKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.REACT_APP_SUPABASE_KEY;
+    // @ts-ignore
+    envJwtSecret = import.meta.env.VITE_JWT_SECRET || import.meta.env.REACT_APP_JWT_SECRET;
   }
 } catch (e) {}
 
@@ -33,17 +32,83 @@ try {
     if (!envApiKey) {
         envApiKey = process.env.REACT_APP_SUPABASE_KEY || process.env.VITE_SUPABASE_KEY || '';
     }
+    if (!envJwtSecret) {
+        envJwtSecret = process.env.REACT_APP_JWT_SECRET || process.env.VITE_JWT_SECRET || '';
+    }
   }
 } catch (e) {}
 
-const BASE_URL = envBaseUrl || DEFAULT_BASE_URL;
-const API_KEY = envApiKey || DEFAULT_API_KEY;
+const BASE_URL = envBaseUrl ;
+const API_KEY = envApiKey ;
+// Fallback secret for demo/dev purposes if env var is missing. 
+// In production, this MUST be set via environment variables.
+const JWT_SECRET = envJwtSecret || 'my-secret-key'; 
 
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${API_KEY}`,
-  'apikey': API_KEY,
-});
+// --- JWT Generation Helpers ---
+
+const textEncoder = new TextEncoder();
+
+const base64UrlEncode = (data: Uint8Array | string): string => {
+    let base64 = '';
+    if (typeof data === 'string') {
+        const bytes = textEncoder.encode(data);
+        base64 = btoa(String.fromCharCode(...bytes));
+    } else {
+        base64 = btoa(String.fromCharCode(...data));
+    }
+    return base64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+};
+
+const generateJWT = async (email: string) => {
+    const header = { alg: "HS256", typ: "JWT" };
+    const payload = {
+        email: email,
+        apikey: API_KEY,
+        exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiration
+    };
+
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+    const tokenData = `${encodedHeader}.${encodedPayload}`;
+
+    // Import the secret key for HMAC
+    const key = await crypto.subtle.importKey(
+        'raw',
+        textEncoder.encode(JWT_SECRET),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    // Sign the data
+    const signature = await crypto.subtle.sign('HMAC', key, textEncoder.encode(tokenData));
+    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+
+    return `${tokenData}.${encodedSignature}`;
+};
+
+const getHeaders = async (emailOverride?: string) => {
+  let email = emailOverride;
+  
+  // If no email provided, try to find the logged-in user in localStorage
+  if (!email) {
+      try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+              const u = JSON.parse(stored);
+              email = u.email;
+          }
+      } catch(e) {}
+  }
+  
+  const token = await generateJWT(email || '');
+
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    'apikey': API_KEY,
+  };
+};
 
 // --- WebAuthn Helpers ---
 
@@ -72,28 +137,28 @@ const bufferToBase64URL = (buffer: ArrayBuffer): string => {
 
 export const fetchTransactions = async (month: string): Promise<TransactionResponse> => {
   const url = `${BASE_URL}/transaction?month=${month}`;
-  const response = await fetch(url, { method: 'GET', headers: getHeaders() });
+  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
   if (!response.ok) throw new Error(`Error fetching data: ${response.statusText}`);
   return response.json();
 };
 
 export const fetchCategories = async (): Promise<CategoryResponse> => {
   const url = `${BASE_URL}/category`;
-  const response = await fetch(url, { method: 'GET', headers: getHeaders() });
+  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
   if (!response.ok) throw new Error(`Error fetching categories: ${response.statusText}`);
   return response.json();
 };
 
 export const fetchRegularTransactions = async (): Promise<RegularTransactionResponse> => {
   const url = `${BASE_URL}/regular`;
-  const response = await fetch(url, { method: 'GET', headers: getHeaders() });
+  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
   if (!response.ok) throw new Error(`Error fetching regular transactions: ${response.statusText}`);
   return response.json();
 };
 
 export const fetchYearlySummary = async (year: string): Promise<YearlySummaryResponse> => {
   const url = `${BASE_URL}/summary?year=${year}`;
-  const response = await fetch(url, { method: 'GET', headers: getHeaders() });
+  const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
   if (!response.ok) throw new Error(`Error fetching yearly summary: ${response.statusText}`);
   return response.json();
 };
@@ -115,56 +180,56 @@ export const fetchExchangeRate = async (currencyCode: string): Promise<number> =
 
 export const addTransaction = async (data: CreateTransactionPayload['transaction']): Promise<void> => {
   const url = `${BASE_URL}/transaction`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ transaction: data }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ transaction: data }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const addBulkTransactions = async (data: BulkCreateTransactionPayload['transaction']): Promise<void> => {
   const url = `${BASE_URL}/transaction`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ transaction: data }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ transaction: data }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const updateTransaction = async (id: string, data: CreateTransactionPayload['transaction']): Promise<void> => {
   const url = `${BASE_URL}/transaction/${id}`;
-  const response = await fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ transaction: data }) });
+  const response = await fetch(url, { method: 'PUT', headers: await getHeaders(), body: JSON.stringify({ transaction: data }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
   const url = `${BASE_URL}/transaction/${id}`;
-  const response = await fetch(url, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetch(url, { method: 'DELETE', headers: await getHeaders() });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const addRegularTransaction = async (data: CreateRegularTransactionPayload['regularTransaction']): Promise<void> => {
   const url = `${BASE_URL}/regular`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ regularTransaction: data }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(), body: JSON.stringify({ regularTransaction: data }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const updateRegularTransaction = async (id: string, data: CreateRegularTransactionPayload['regularTransaction']): Promise<void> => {
   const url = `${BASE_URL}/regular/${id}`;
-  const response = await fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ regularTransaction: data }) });
+  const response = await fetch(url, { method: 'PUT', headers: await getHeaders(), body: JSON.stringify({ regularTransaction: data }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const deleteRegularTransaction = async (id: string): Promise<void> => {
   const url = `${BASE_URL}/regular/${id}`;
-  const response = await fetch(url, { method: 'DELETE', headers: getHeaders() });
+  const response = await fetch(url, { method: 'DELETE', headers: await getHeaders() });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
 export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string } }> => {
   const url = `${BASE_URL}/check-user-email`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify({ email }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
   return response.json();
 };
 
 export const getPasskeyOptions = async (email: string): Promise<any> => {
   const url = `${BASE_URL}/auth-options`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify({ email }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
   return response.json();
 };
@@ -190,14 +255,14 @@ export const verifyPasskeyLogin = async (email: string, credential: any): Promis
     }
   };
 
-  const verifyRes = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+  const verifyRes = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify(payload) });
   if (!verifyRes.ok) throw new Error(await verifyRes.text() || verifyRes.statusText);
   return verifyRes.json();
 };
 
 export const getRegistrationOptions = async (email: string): Promise<any> => {
   const url = `${BASE_URL}/reg-options`;
-  const response = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) });
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify({ email }) });
   if (!response.ok) throw new Error(await response.text() || response.statusText);
   return response.json();
 };
@@ -221,7 +286,7 @@ export const verifyPasskeyRegistration = async (email: string, credential: any):
     }
   };
 
-  const verifyRes = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+  const verifyRes = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify(payload) });
   if (!verifyRes.ok) throw new Error(await verifyRes.text() || verifyRes.statusText);
   return verifyRes.json();
 };
