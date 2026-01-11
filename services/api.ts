@@ -225,16 +225,17 @@ export const checkUserEmail = async (email: string): Promise<{ exists: boolean; 
   const response = await fetch(url, { method: 'POST', headers: await getHeaders(email) });
   if (!response.ok) {
     const text = await response.text();
+    let errorMessage = text;
     try {
       // Try to parse JSON error message from backend
       const json = JSON.parse(text);
       if (json && json.message) {
-        throw new Error(json.message);
+        errorMessage = json.message;
       }
     } catch (e) {
-      // If parsing fails, ignore and throw raw text below
+      // If parsing fails, use raw text
     }
-    throw new Error(text || response.statusText);
+    throw new Error(errorMessage || response.statusText);
   }
   return response.json();
 };
