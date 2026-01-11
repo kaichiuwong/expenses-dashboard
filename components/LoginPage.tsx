@@ -1,12 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  checkUserEmail, 
-  getPasskeyOptions, 
-  verifyPasskeyLogin, 
-  getRegistrationOptions,
-  verifyPasskeyRegistration,
-  base64URLToBuffer 
-} from '../services/api';
+import React, { useState } from 'react';
+import { checkUserEmail } from '../services/api';
+import { registerLocalPasskey, authenticateLocalPasskey } from '../services/auth';
 import { useTheme } from '../hooks/useTheme';
 
 interface LoginPageProps {
@@ -36,33 +30,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Passkey Options State
-  const [passkeyOptions, setPasskeyOptions] = useState<any>(null);
-  const [isPreparingPasskey, setIsPreparingPasskey] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    // If we moved to passkey step, fetch options immediately so button is ready
-    if (step === 'passkey' && email) {
-      const fetchOptions = async () => {
-        setIsPreparingPasskey(true);
-        setError(null);
-        try {
-          const options = await getPasskeyOptions(email);
-          setPasskeyOptions(options);
-        } catch (err: any) {
-          console.warn("Failed to fetch login options, user might not have passkeys yet.", err);
-          // We do NOT set a blocking error here, because we want to allow the "Create Passkey" button to be clickable.
-          // setError("No passkeys found."); 
-        } finally {
-          setIsPreparingPasskey(false);
-        }
-      };
-      fetchOptions();
-    }
-  }, [step, email]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,38 +56,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   const handlePasskeyLogin = async () => {
-    if (!passkeyOptions) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Decode options for browser
-      const publicKey: any = {
-        ...passkeyOptions,
-        challenge: base64URLToBuffer(passkeyOptions.challenge),
-      };
-
-      if (passkeyOptions.allowCredentials) {
-        publicKey.allowCredentials = passkeyOptions.allowCredentials.map((c: any) => ({
-          ...c,
-          id: base64URLToBuffer(c.id),
-        }));
+      const success = await authenticateLocalPasskey();
+      if (success) {
+        onLogin(foundUser);
+      } else {
+        setError('Authentication failed.');
       }
-
-      // 1. Get Credential
-      const credential = await navigator.credentials.get({ publicKey });
-      if (!credential) throw new Error('Authentication cancelled.');
-
-      // 2. Verify
-      const result = await verifyPasskeyLogin(email, credential);
-      
-      // 3. Login
-      onLogin(result.user || foundUser);
-
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Passkey verification failed.');
+      setError(err.message || 'Passkey verification failed. If you haven\'t created one on this device yet, try "First time? Create Passkey".');
     } finally {
       setIsLoading(false);
     }
@@ -129,36 +79,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setError(null);
 
     try {
-      // 1. Get Registration Options
-      const options = await getRegistrationOptions(email);
-      
-      // Decode options for browser
-      const publicKey: any = {
-        ...options,
-        challenge: base64URLToBuffer(options.challenge),
-        user: {
-            ...options.user,
-            id: base64URLToBuffer(options.user.id)
-        }
-      };
-      
-      if (options.excludeCredentials) {
-        publicKey.excludeCredentials = options.excludeCredentials.map((c: any) => ({
-             ...c,
-             id: base64URLToBuffer(c.id)
-        }));
+      const success = await registerLocalPasskey(email);
+      if (success) {
+        // After registration, log the user in
+        onLogin(foundUser);
+      } else {
+        setError('Passkey creation failed.');
       }
-
-      // 2. Create Credential
-      const credential = await navigator.credentials.create({ publicKey });
-      if (!credential) throw new Error('Registration cancelled.');
-
-      // 3. Verify Registration
-      const result = await verifyPasskeyRegistration(email, credential);
-
-      // 4. Login
-      onLogin(result.user || foundUser);
-
     } catch (err: any) {
         console.error(err);
         setError(err.message || 'Passkey creation failed.');
@@ -172,7 +99,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setFoundUser(null);
     setEmail('');
     setError(null);
-    setPasskeyOptions(null);
   };
 
   return (
@@ -276,10 +202,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <div className="space-y-3">
                     <button
                         onClick={handlePasskeyLogin}
-                        disabled={isLoading || isPreparingPasskey || !passkeyOptions}
+                        disabled={isLoading}
                         className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                        {isLoading && !isPreparingPasskey ? 'Verifying...' : isPreparingPasskey ? 'Preparing...' : 'Authenticate with Passkey'}
+                        {isLoading ? 'Verifying...' : 'Authenticate with Passkey'}
                     </button>
                     
                     <button

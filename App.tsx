@@ -468,7 +468,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
             {viewMode === 'yearly' && (
-              <YearlyDashboard initialYear={month.split('-')[0]} selectedYear={year} />
+              <YearlyDashboard selectedYear={year} />
             )}
             
             {viewMode === 'regular' && (
