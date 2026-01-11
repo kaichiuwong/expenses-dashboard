@@ -9,7 +9,7 @@ import { SummaryCard } from './SummaryCard';
 import { COLORS } from '../utils/analytics';
 
 interface YearlyDashboardProps {
-  initialYear: string;
+  selectedYear: string;
 }
 
 const DollarIcon = () => (
@@ -28,8 +28,7 @@ const PercentIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
 );
 
-export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear }) => {
-  const [year, setYear] = useState(initialYear);
+export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }) => {
   const [data, setData] = useState<YearlySummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +40,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
       setError(null);
       setActiveMonthIndex(null); // Reset selection on year change
       try {
-        const result = await fetchYearlySummary(year);
+        const result = await fetchYearlySummary(selectedYear);
         setData(result);
       } catch (err: any) {
         console.error(err);
@@ -52,7 +51,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
     };
 
     loadYearlyData();
-  }, [year]);
+  }, [selectedYear]);
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -116,34 +115,12 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
     })).sort((a, b) => b.value - a.value);
   }, [data, activeMonthIndex, categoryColorMap]);
 
-  const availableYears = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    // Create a range of years, e.g., 5 years back and 2 years forward
-    const years = [];
-    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
-        years.push(i);
-    }
-    
-    // Ensure the current selected year is included if it's outside the range
-    const selectedYearInt = parseInt(year);
-    if (!isNaN(selectedYearInt) && !years.includes(selectedYearInt)) {
-        years.push(selectedYearInt);
-    }
-    
-    // Sort descending
-    return years.sort((a, b) => b - a);
-  }, [year]);
-
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setYear(e.target.value);
-  };
-
   const pieChartTitle = useMemo(() => {
     if (activeMonthIndex !== null && data?.monthly_breakdown[activeMonthIndex]) {
         return `Income Allocation: ${data.monthly_breakdown[activeMonthIndex].month}`;
     }
-    return `Income Allocation (${year})`;
-  }, [activeMonthIndex, data, year]);
+    return `Income Allocation (${selectedYear})`;
+  }, [activeMonthIndex, data, selectedYear]);
 
   if (error) {
     return (
@@ -164,23 +141,6 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ initialYear })
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-white">Yearly Overview: {year}</h2>
-        <div className="flex items-center gap-2">
-            <label htmlFor="year-select" className="text-sm font-medium text-slate-600 dark:text-slate-300">Select Year:</label>
-            <select 
-              id="year-select"
-              value={year}
-              onChange={handleYearChange}
-              className="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-3 py-1.5 text-sm w-32 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer"
-            >
-                {availableYears.map(y => (
-                    <option key={y} value={y}>{y}</option>
-                ))}
-            </select>
-        </div>
-      </div>
-
       {loading ? (
         <div className="animate-pulse space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

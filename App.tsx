@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { fetchTransactions, deleteTransaction } from './services/api';
-import { Transaction } from './types';
+import { Transaction, RegularTransaction } from './types';
 import { 
   calculateFinancials, 
   getExpensesByCategory, 
@@ -17,6 +17,7 @@ import { AddTransactionModal } from './components/AddTransactionModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { YearlyDashboard } from './components/YearlyDashboard';
 import { RegularTransactionManager } from './components/RegularTransactionManager';
+import { AddRegularTransactionModal } from './components/AddRegularTransactionModal';
 import { useTheme } from './hooks/useTheme';
 
 // --- Icons ---
@@ -56,10 +57,25 @@ const ChevronLeftIcon = () => (
 const ChevronRightIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 );
+const CalendarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+);
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular'>('monthly');
-  const [month, setMonth] = useState('2026-01');
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  
+  // Yearly View State
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+
+  // Regular Transaction State
+  const [isRegularModalOpen, setIsRegularModalOpen] = useState(false);
+  const [editingRegularTransaction, setEditingRegularTransaction] = useState<RegularTransaction | null>(null);
+  const [regularRefreshTrigger, setRegularRefreshTrigger] = useState(0);
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +166,19 @@ const App: React.FC = () => {
     return { dailyTarget: daily, remainingDays: remDays };
   }, [month, income, expense, targetSavings]);
 
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
+        years.push(i);
+    }
+    const selectedYearInt = parseInt(year);
+    if (!isNaN(selectedYearInt) && !years.includes(selectedYearInt)) {
+        years.push(selectedYearInt);
+    }
+    return years.sort((a, b) => b - a);
+  }, [year]);
+
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMonth(e.target.value);
   };
@@ -162,6 +191,12 @@ const App: React.FC = () => {
     const newYear = newDate.getFullYear();
     const newMonth = String(newDate.getMonth() + 1).padStart(2, '0');
     setMonth(`${newYear}-${newMonth}`);
+  };
+  
+  const goToCurrentMonth = () => {
+    const now = new Date();
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    setMonth(current);
   };
 
   const handleTransactionSaved = () => {
@@ -192,6 +227,17 @@ const App: React.FC = () => {
       }
     }
   };
+
+  // Regular Transaction Handlers
+  const handleRegularEdit = (transaction: RegularTransaction) => {
+    setEditingRegularTransaction(transaction);
+    setIsRegularModalOpen(true);
+  };
+
+  const handleRegularSuccess = () => {
+      setRegularRefreshTrigger(prev => prev + 1);
+  };
+
 
   // Chart Styling based on theme
   const chartColors = {
@@ -269,7 +315,12 @@ const App: React.FC = () => {
       {/* --- Main Content Area --- */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Context Header (Desktop & Mobile) */}
-        <header className="h-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-end px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 sticky top-0">
+        <header className="h-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 sticky top-0">
+           <div className="flex items-center">
+                {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Overview</h2>}
+                {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Regular Transactions (Templates)</h2>}
+           </div>
+
            <div className="flex items-center gap-2 sm:gap-3">
               {viewMode === 'monthly' && (
                 <>
@@ -281,18 +332,33 @@ const App: React.FC = () => {
                     >
                       <ChevronLeftIcon />
                     </button>
-                    <input 
-                      type="month" 
-                      value={month} 
-                      onChange={handleMonthChange}
-                      className="bg-transparent text-slate-900 dark:text-white px-2 py-1.5 text-xs sm:text-sm outline-none border-none min-w-[120px]"
-                    />
+                    
+                    <div className="relative flex items-center justify-center px-3 py-1.5 min-w-[100px]">
+                        <span className="text-sm font-medium text-slate-900 dark:text-white pointer-events-none">
+                            {month}
+                        </span>
+                        <input 
+                            type="month" 
+                            value={month} 
+                            onChange={handleMonthChange}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                            title="Select Month"
+                        />
+                    </div>
+
                     <button
                       onClick={() => navigateMonth(1)}
-                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-r-md transition-colors border-l border-slate-200 dark:border-slate-700"
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 border-l border-slate-200 dark:border-slate-700 transition-colors"
                       title="Next Month"
                     >
                       <ChevronRightIcon />
+                    </button>
+                     <button
+                      onClick={goToCurrentMonth}
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-r-md border-l border-slate-200 dark:border-slate-700 transition-colors"
+                      title="Go to Current Month"
+                    >
+                      <CalendarIcon />
                     </button>
                   </div>
 
@@ -325,17 +391,60 @@ const App: React.FC = () => {
                   </button>
                 </>
               )}
+
+              {viewMode === 'yearly' && (
+                 <div className="flex items-center gap-2">
+                    <label htmlFor="year-select" className="text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">Select Year:</label>
+                    <select 
+                      id="year-select"
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-md px-3 py-1.5 text-sm w-32 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer shadow-sm"
+                    >
+                        {availableYears.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                </div>
+              )}
+
+              {viewMode === 'regular' && (
+                  <>
+                    <button
+                        onClick={() => {
+                            setEditingRegularTransaction(null);
+                            setIsRegularModalOpen(true);
+                        }}
+                        className="hidden sm:flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"
+                    >
+                        <PlusIcon />
+                        Add Template
+                    </button>
+                    <button
+                        onClick={() => {
+                            setEditingRegularTransaction(null);
+                            setIsRegularModalOpen(true);
+                        }}
+                        className="sm:hidden p-2 bg-indigo-600 text-white rounded-md shadow-sm"
+                    >
+                        <PlusIcon />
+                    </button>
+                  </>
+              )}
            </div>
         </header>
 
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
             {viewMode === 'yearly' && (
-              <YearlyDashboard initialYear={month.split('-')[0]} />
+              <YearlyDashboard initialYear={month.split('-')[0]} selectedYear={year} />
             )}
             
             {viewMode === 'regular' && (
-              <RegularTransactionManager />
+              <RegularTransactionManager 
+                onEdit={handleRegularEdit} 
+                refreshTrigger={regularRefreshTrigger}
+              />
             )}
 
             {viewMode === 'monthly' && (
@@ -552,44 +661,6 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Weekday Analysis */}
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Spending by Day of Week</h3>
-                      <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={weekdayData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                            <XAxis 
-                              dataKey="name" 
-                              axisLine={false} 
-                              tickLine={false}
-                              tick={{ fill: chartColors.text, fontSize: 12 }}
-                              dy={10}
-                            />
-                            <YAxis 
-                              axisLine={false} 
-                              tickLine={false}
-                              tick={{ fill: chartColors.text, fontSize: 12 }}
-                              tickFormatter={(val) => `$${val}`}
-                            />
-                            <Tooltip 
-                              cursor={{ fill: theme === 'dark' ? '#334155' : '#f8fafc' }}
-                              contentStyle={{ 
-                                backgroundColor: chartColors.tooltipBg,
-                                borderColor: chartColors.grid,
-                                borderRadius: '8px', 
-                                color: chartColors.tooltipText,
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                              }}
-                              itemStyle={{ color: chartColors.tooltipText }}
-                              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Total']}
-                            />
-                            <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
                     {/* Transaction List */}
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-all">
                       <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
@@ -621,6 +692,13 @@ const App: React.FC = () => {
             )}
         </main>
       </div>
+
+      <AddRegularTransactionModal 
+        isOpen={isRegularModalOpen}
+        onClose={() => setIsRegularModalOpen(false)}
+        onSuccess={handleRegularSuccess}
+        transactionToEdit={editingRegularTransaction}
+      />
 
       {/* --- Mobile Bottom Navigation --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center z-30 pb-safe">
