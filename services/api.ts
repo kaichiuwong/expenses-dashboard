@@ -106,7 +106,6 @@ const getHeaders = async (emailOverride?: string) => {
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
-    'apikey': API_KEY,
   };
 };
 
