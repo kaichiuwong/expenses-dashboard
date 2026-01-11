@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
@@ -67,6 +67,8 @@ const App: React.FC = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  
+  const monthInputRef = useRef<HTMLInputElement>(null);
   
   // Yearly View State
   const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -333,14 +335,25 @@ const App: React.FC = () => {
                       <ChevronLeftIcon />
                     </button>
                     
-                    <div className="relative flex items-center justify-center px-3 py-1.5 min-w-[100px]">
+                    <div className="relative flex items-center justify-center px-3 py-1.5 min-w-[100px] hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                         <span className="text-sm font-medium text-slate-900 dark:text-white pointer-events-none">
                             {month}
                         </span>
                         <input 
+                            ref={monthInputRef}
                             type="month" 
                             value={month} 
                             onChange={handleMonthChange}
+                            onClick={(e) => {
+                                try {
+                                    // Explicitly show picker on click for consistent behavior across browsers
+                                    if ('showPicker' in e.currentTarget) {
+                                      e.currentTarget.showPicker();
+                                    }
+                                } catch(err) {
+                                    // Fallback handled by browser
+                                }
+                            }}
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                             title="Select Month"
                         />
