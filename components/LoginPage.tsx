@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { checkUserEmail } from '../services/api';
 import { registerLocalPasskey, authenticateLocalPasskey } from '../services/auth';
 import { useTheme } from '../hooks/useTheme';
-import { AddTransactionModal } from './AddTransactionModal';
 
 interface LoginPageProps {
   onLogin: (user: any) => void;
@@ -20,15 +19,11 @@ const FingerprintIcon = () => (
 const BackIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
 );
-const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-);
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<'email' | 'passkey'>('email');
   const [foundUser, setFoundUser] = useState<any>(null);
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -181,28 +176,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   )}
                 </button>
               </div>
-
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">Or</span>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setIsQuickAddOpen(true)}
-                    className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                  >
-                    <PlusIcon />
-                    Quick Add Transaction
-                  </button>
-                </div>
-              </div>
             </form>
           )}
 
@@ -255,16 +228,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         </div>
       </div>
-      
-      <AddTransactionModal 
-        isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
-        onSuccess={() => {
-            // Transaction added successfully
-            setIsQuickAddOpen(false);
-            // Optionally could add a toast here
-        }}
-      />
     </div>
   );
 };
