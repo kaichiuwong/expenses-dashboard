@@ -208,9 +208,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <button
                         onClick={handlePasskeyRegistration}
                         disabled={isLoading}
-                        className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-sm text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        className="w-full flex justify-center items-center py-2 px-4 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-sm text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                     >
-                        <PlusIcon />
                         First time? Create Passkey
                     </button>
 
