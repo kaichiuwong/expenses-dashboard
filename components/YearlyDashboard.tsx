@@ -91,8 +91,9 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        const containerWidth = sankeyContainerRef.current.clientWidth - 24; // Account for padding more conservatively
-        setSankeyWidth(Math.max(containerWidth, 300)); // Minimum width for very small screens
+        // Get container width and account for SVG internal padding (50px on each side)
+        const containerWidth = sankeyContainerRef.current.clientWidth;
+        setSankeyWidth(containerWidth); // Use full container width, SVG will handle its own padding
       }
     };
     
