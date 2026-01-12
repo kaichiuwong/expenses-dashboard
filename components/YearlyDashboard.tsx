@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  PieChart, Pie, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { fetchYearlySummary } from '../services/api';
 import { YearlySummaryResponse } from '../types';
 import { SummaryCard } from './SummaryCard';
+import { SankeyChart } from './SankeyChart';
 import { COLORS } from '../utils/analytics';
 
 interface YearlyDashboardProps {
@@ -73,53 +73,74 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     return map;
   }, [data]);
 
-  const pieData = useMemo(() => {
-    if (!data) return [];
+  const sankeyData = useMemo(() => {
+    if (!data) return { nodes: [], links: [] };
     
     let sourceCategories;
     let savingsAmount;
+    let incomeAmount;
 
     // Determine if we are showing yearly data or specific month data
     if (activeMonthIndex !== null && data.monthly_breakdown[activeMonthIndex]) {
         const monthData = data.monthly_breakdown[activeMonthIndex];
         sourceCategories = monthData.expenses_by_category;
         savingsAmount = monthData.total_savings;
+        incomeAmount = monthData.total_salary;
     } else {
         sourceCategories = data.yearly_expenses_by_category;
         savingsAmount = data.yearly_total_savings;
+        incomeAmount = data.yearly_total_income;
     }
     
-    // Map categories to chart data
-    const items = sourceCategories.map((c, index) => ({
-      name: c.category_name,
+    // Create nodes
+    const nodes = [
+      { id: 'income', label: 'Income', color: '#10b981' }
+    ];
+    
+    // Add category nodes
+    sourceCategories.forEach((c, index) => {
+      nodes.push({
+        id: c.category_name,
+        label: c.category_name,
+        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+      });
+    });
+    
+    // Add savings node if positive
+    if (savingsAmount > 0) {
+      nodes.push({
+        id: 'SAVINGS',
+        label: 'SAVINGS',
+        color: '#10b981'
+      });
+    }
+    
+    // Create links from income to categories
+    const links = sourceCategories.map((c, index) => ({
+      source: 'income',
+      target: c.category_name,
       value: c.total,
-      // Use consistent color from yearly map, fallback to index if new category found
       color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
     }));
-
-    // Add Savings if positive
+    
+    // Add link to savings if positive
     if (savingsAmount > 0) {
-      items.push({
-        name: 'SAVINGS',
+      links.push({
+        source: 'income',
+        target: 'SAVINGS',
         value: savingsAmount,
-        color: '#10b981' // Explicit green for savings
+        color: '#10b981'
       });
     }
 
-    // Calculate total value (should approx equal Income if savings included)
-    const totalValue = items.reduce((sum, item) => sum + item.value, 0);
-
-    return items.map(item => ({
-      ...item,
-      percentage: totalValue > 0 ? (item.value / totalValue) * 100 : 0
-    })).sort((a, b) => b.value - a.value);
+    return { nodes, links };
   }, [data, activeMonthIndex, categoryColorMap]);
 
-  const pieChartTitle = useMemo(() => {
+  const sankeyChartTitle = useMemo(() => {
     if (activeMonthIndex !== null && data?.monthly_breakdown[activeMonthIndex]) {
-        return `Income Allocation: ${data.monthly_breakdown[activeMonthIndex].month}`;
+        return `Income Flow: ${data.monthly_breakdown[activeMonthIndex].month}`;
     }
-    return `Income Allocation (${selectedYear})`;
+    return `Income Flow (${selectedYear})`;
   }, [activeMonthIndex, data, selectedYear]);
 
   if (error) {
@@ -222,51 +243,18 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
               </div>
             </div>
 
-             {/* Yearly Category Pie Chart */}
+             {/* Income Flow Sankey Diagram */}
              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={pieChartTitle}>
-                {pieChartTitle}
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
+                {sankeyChartTitle}
               </h3>
-              <div className="flex-1 min-h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                       formatter={(value: number, name: string, props: any) => {
-                         const percent = props.payload.percentage;
-                         return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, name];
-                       }}
-                       contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
-                       itemStyle={{ color: '#f8fafc' }}
-                    />
-                    <Legend 
-                      layout="vertical" 
-                      verticalAlign="bottom" 
-                      align="center"
-                      wrapperStyle={{ maxHeight: '160px', overflowY: 'auto', width: '100%' }}
-                      formatter={(value, entry: any) => {
-                        const { percentage } = entry.payload;
-                        return (
-                          <span className="text-slate-600 dark:text-slate-300 font-medium ml-1">
-                            {value} <span className="text-slate-500 dark:text-slate-400">({percentage.toFixed(1)}%)</span>
-                          </span>
-                        );
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex-1 min-h-[450px] w-full flex items-center justify-center overflow-x-auto">
+                <SankeyChart
+                  nodes={sankeyData.nodes}
+                  links={sankeyData.links}
+                  width={700}
+                  height={450}
+                />
               </div>
             </div>
           </div>

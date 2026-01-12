@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { 
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, ResponsiveContainer, Tooltip
 } from 'recharts';
 import { fetchTransactions, deleteTransaction } from './services/api';
 import { Transaction, RegularTransaction } from './types';
@@ -23,6 +22,7 @@ import { AddCategoryModal } from './components/AddCategoryModal';
 import { LoginPage } from './components/LoginPage';
 import { TwoFactorSetup } from './components/TwoFactorSetup';
 import { TransactionManager } from './components/TransactionManager';
+import { SankeyChart } from './components/SankeyChart';
 import { useTheme } from './hooks/useTheme';
 import { getCookie, setCookie } from './utils/cookies';
 
@@ -188,9 +188,52 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
     return data.sort((a, b) => b.value - a.value);
   }, [transactions, savings]);
 
-  const totalPieValue = useMemo(() => {
-    return allocationData.reduce((acc, cur) => acc + cur.value, 0);
-  }, [allocationData]);
+  const monthlySankeyData = useMemo(() => {
+    const expenses = getExpensesByCategory(transactions);
+    
+    // Create nodes
+    const nodes = [
+      { id: 'income', label: 'Income', color: '#10b981' }
+    ];
+    
+    // Add category nodes
+    expenses.forEach((cat) => {
+      nodes.push({
+        id: cat.name,
+        label: cat.name,
+        color: cat.color
+      });
+    });
+    
+    // Add savings node if positive
+    if (savings > 0) {
+      nodes.push({
+        id: 'SAVINGS',
+        label: 'SAVINGS',
+        color: '#10b981'
+      });
+    }
+    
+    // Create links from income to categories
+    const links = expenses.map((cat) => ({
+      source: 'income',
+      target: cat.name,
+      value: cat.value,
+      color: cat.color
+    }));
+    
+    // Add link to savings if positive
+    if (savings > 0) {
+      links.push({
+        source: 'income',
+        target: 'SAVINGS',
+        value: savings,
+        color: '#10b981'
+      });
+    }
+
+    return { nodes, links };
+  }, [transactions, savings]);
 
   const topCategory = allocationData.find(d => d.name !== 'SAVINGS')?.name || 'N/A';
   const topCategoryAmount = allocationData.find(d => d.name !== 'SAVINGS')?.value || 0;
@@ -883,53 +926,16 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                         </div>
                       </div>
 
-                      {/* Category Pie */}
+                      {/* Income Flow Sankey Diagram */}
                       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Allocation</h3>
-                        <div className="h-72 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={allocationData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={90}
-                                paddingAngle={5}
-                                dataKey="value"
-                                stroke="none"
-                              >
-                                {allocationData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: chartColors.tooltipBg,
-                                  borderColor: chartColors.grid,
-                                  borderRadius: '8px', 
-                                  color: chartColors.tooltipText,
-                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                                }}
-                                itemStyle={{ color: chartColors.tooltipText }}
-                                formatter={(value: number, name: string) => {
-                                  const percent = totalPieValue > 0 ? (value / totalPieValue) * 100 : 0;
-                                  return [`$${value.toFixed(2)} (${percent.toFixed(1)}%)`, name];
-                                }}
-                              />
-                              <Legend 
-                                layout="vertical" 
-                                verticalAlign="middle" 
-                                align="right"
-                                iconType="circle"
-                                formatter={(value, entry: any) => {
-                                  const val = entry.payload.value;
-                                  const percent = totalPieValue > 0 ? (val / totalPieValue) * 100 : 0;
-                                  return <span style={{ color: chartColors.text }}>{value} ({percent.toFixed(1)}%)</span>;
-                                }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Flow</h3>
+                        <div className="h-96 w-full flex items-center justify-center overflow-x-auto">
+                          <SankeyChart
+                            nodes={monthlySankeyData.nodes}
+                            links={monthlySankeyData.links}
+                            width={600}
+                            height={380}
+                          />
                         </div>
                       </div>
                     </div>
