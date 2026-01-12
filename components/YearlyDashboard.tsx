@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { fetchYearlySummary, fetchTransactions } from '../services/api';
+import { fetchYearlySummary, fetchAllTransactions } from '../services/api';
 import { YearlySummaryResponse, Transaction } from '../types';
 import { SummaryCard } from './SummaryCard';
 import { SankeyChart } from './SankeyChart';
@@ -44,9 +44,13 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
         const result = await fetchYearlySummary(selectedYear);
         setData(result);
         
-        // Fetch transactions for the selected year
-        const transactionsResult = await fetchTransactions(selectedYear);
-        setTransactions(transactionsResult.transactions);
+        // Fetch all transactions without month filter
+        const transactionsResult = await fetchAllTransactions();
+        // Filter by selected year
+        const yearTransactions = transactionsResult.transactions.filter(t => 
+          t.trx_date.startsWith(selectedYear)
+        );
+        setTransactions(yearTransactions);
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Failed to fetch yearly summary');
@@ -58,23 +62,27 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     loadYearlyData();
   }, [selectedYear]);
   
-  // Fetch transactions when active month changes
+  // Filter transactions when active month changes
   useEffect(() => {
     if (!data || activeMonthIndex === null) return;
     
-    const loadMonthTransactions = async () => {
+    const filterMonthTransactions = async () => {
       try {
         const monthData = data.monthly_breakdown[activeMonthIndex];
         if (monthData) {
-          const transactionsResult = await fetchTransactions(monthData.month);
-          setTransactions(transactionsResult.transactions);
+          // Fetch all transactions and filter by month
+          const transactionsResult = await fetchAllTransactions();
+          const monthTransactions = transactionsResult.transactions.filter(t => 
+            t.trx_date.startsWith(monthData.month)
+          );
+          setTransactions(monthTransactions);
         }
       } catch (err: any) {
         console.error('Failed to fetch month transactions:', err);
       }
     };
     
-    loadMonthTransactions();
+    filterMonthTransactions();
   }, [activeMonthIndex, data]);
 
   const chartData = useMemo(() => {
