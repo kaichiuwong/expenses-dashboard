@@ -18,11 +18,24 @@ const XCircleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
 );
 
+const ArrowUpIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+);
+
+const ArrowDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+);
+
+type SortField = 'date' | 'category' | 'name' | 'amount';
+type SortDirection = 'asc' | 'desc';
+
 export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Fetch all transactions
   useEffect(() => {
@@ -60,12 +73,39 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     });
   }, [transactions, searchQuery]);
 
-  // Sort transactions by date descending
+  // Handle column sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Sort transactions based on current sort field and direction
   const sortedTransactions = useMemo(() => {
-    return [...filteredTransactions].sort((a, b) => 
-      new Date(b.trx_date).getTime() - new Date(a.trx_date).getTime()
-    );
-  }, [filteredTransactions]);
+    return [...filteredTransactions].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case 'date':
+          comparison = new Date(a.trx_date).getTime() - new Date(b.trx_date).getTime();
+          break;
+        case 'category':
+          comparison = a.category.name.localeCompare(b.category.name);
+          break;
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'amount':
+          comparison = Math.abs(a.amount) - Math.abs(b.amount);
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredTransactions, sortField, sortDirection]);
 
   // Export to CSV
   const handleExportCSV = () => {
@@ -75,15 +115,20 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     }
 
     // Create CSV content
-    const headers = ['Date', 'Category', 'Name', 'Amount'];
+    const headers = ['Date', 'Category', 'Name', 'Amount', 'Type'];
     const csvRows = [
       headers.join(','),
-      ...sortedTransactions.map(t => [
-        t.trx_date,
-        `"${t.category.name.replace(/"/g, '""')}"`,
-        `"${t.name.replace(/"/g, '""')}"`, // Escape quotes in name
-        t.amount.toFixed(2)
-      ].join(','))
+      ...sortedTransactions.map(t => {
+        const absAmount = Math.abs(t.amount).toFixed(2);
+        const type = t.amount > 0 ? 'DR' : t.amount < 0 ? 'CR' : '';
+        return [
+          t.trx_date,
+          `"${t.category.name.replace(/"/g, '""')}"`,
+          `"${t.name.replace(/"/g, '""')}"`,
+          absAmount,
+          type
+        ].join(',');
+      })
     ];
 
     const csvContent = csvRows.join('\n');
@@ -217,26 +262,69 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                   <thead className="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Date
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                        onClick={() => handleSort('date')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Date
+                          {sortField === 'date' && (
+                            sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Category
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                        onClick={() => handleSort('category')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Category
+                          {sortField === 'category' && (
+                            sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Name
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Name
+                          {sortField === 'name' && (
+                            sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                          )}
+                        </div>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Amount
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                        onClick={() => handleSort('amount')}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          Amount
+                          {sortField === 'amount' && (
+                            sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                          )}
+                        </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                     {sortedTransactions.map((transaction) => {
                       const isPositive = transaction.amount > 0;
+                      const isNegative = transaction.amount < 0;
+                      const absAmount = Math.abs(transaction.amount);
                       const amountColorClass = isPositive 
                         ? 'text-red-600 dark:text-red-400' 
-                        : 'text-green-600 dark:text-green-400';
+                        : isNegative
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-slate-800 dark:text-slate-100';
+                      
+                      const displayAmount = `$${absAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                      const typeLabel = isPositive ? ' DR' : isNegative ? ' CR' : '';
                       
                       return (
                         <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
@@ -252,7 +340,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                             {transaction.name}
                           </td>
                           <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${amountColorClass}`}>
-                            ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {displayAmount}{typeLabel}
                           </td>
                         </tr>
                       );
