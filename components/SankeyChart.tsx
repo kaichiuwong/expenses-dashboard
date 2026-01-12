@@ -202,10 +202,12 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const allPositions = [...leftPositions, ...middlePosition, ...rightPositions];
     
-    // Track vertical position for each node's flows separately for incoming and outgoing
-    const nodeFlowY = new Map<string, number>();
+    // Track vertical position for each node's flows - separate for outgoing and incoming
+    const nodeOutgoingY = new Map<string, number>();
+    const nodeIncomingY = new Map<string, number>();
     allPositions.forEach(node => {
-      nodeFlowY.set(node.id, node.y);
+      nodeOutgoingY.set(node.id, node.y);
+      nodeIncomingY.set(node.id, node.y);
     });
     
     // Group links by source to process them together
@@ -248,13 +250,13 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         const targetNodeValue = nodeValues.get(link.target) || 0;
         const targetLinkHeight = targetNodeValue > 0 ? (link.value / targetNodeValue) * targetNode.height : 2;
         
-        // Get current flow positions
-        const sourceY = nodeFlowY.get(link.source) || sourceNode.y;
-        const targetY = nodeFlowY.get(link.target) || targetNode.y;
+        // Get current flow positions - use outgoing for source, incoming for target
+        const sourceY = nodeOutgoingY.get(link.source) || sourceNode.y;
+        const targetY = nodeIncomingY.get(link.target) || targetNode.y;
         
-        // Update flow positions for next link - use respective heights for each side
-        nodeFlowY.set(link.source, sourceY + sourceLinkHeight);
-        nodeFlowY.set(link.target, targetY + targetLinkHeight);
+        // Update flow positions for next link - separate tracking for outgoing and incoming
+        nodeOutgoingY.set(link.source, sourceY + sourceLinkHeight);
+        nodeIncomingY.set(link.target, targetY + targetLinkHeight);
         
         // Calculate positions for the bezier curve
         const x0 = sourceNode.x + sourceNode.width;
