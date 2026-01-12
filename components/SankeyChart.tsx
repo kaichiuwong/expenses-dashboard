@@ -27,6 +27,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   height = 400 
 }) => {
   const layout = useMemo(() => {
+    // Limit height to max 900px to prevent overflow
+    const constrainedHeight = Math.min(height, 900);
+    
     // Calculate node positions and dimensions
     const padding = 50;
     const nodeWidth = 24;
@@ -44,7 +47,14 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     });
     
     const totalValue = Math.max(...Array.from(nodeValues.values()));
-    const availableHeight = height - padding * 2;
+    const availableHeight = constrainedHeight - padding * 2;
+    
+    // Calculate dynamic text size based on number of nodes and available space
+    const targetNodeCount = targetNodes.length;
+    const averageNodeSpace = targetNodeCount > 0 ? availableHeight / targetNodeCount : availableHeight;
+    const textSizeClass = averageNodeSpace < 40 ? 'text-xs' : averageNodeSpace < 60 ? 'text-sm' : 'text-base';
+    const fontSize = averageNodeSpace < 40 ? 10 : averageNodeSpace < 60 ? 12 : 14;
+    const valueTextSize = averageNodeSpace < 40 ? 8 : averageNodeSpace < 60 ? 10 : 12;
     
     // Position source nodes (left side)
     const sourcePositions = sourceNodes.map((node, i) => {
@@ -152,12 +162,15 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     return {
       nodes: allPositions,
-      links: linkPaths
+      links: linkPaths,
+      constrainedHeight: Math.min(height, 900),
+      fontSize,
+      valueTextSize
     };
   }, [nodes, links, width, height]);
 
   return (
-    <svg width={width} height={height} className="overflow-visible">
+    <svg width={width} height={layout.constrainedHeight} className="overflow-visible">
       {/* Draw links first (behind nodes) */}
       {layout.links.map((link, i) => (
         <g key={`link-${i}`}>
@@ -191,16 +204,18 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             y={node.y + node.height / 2}
             textAnchor={node.x < width / 2 ? 'start' : 'end'}
             dominantBaseline="middle"
-            className="fill-slate-700 dark:fill-slate-300 text-sm font-medium"
+            className="fill-slate-700 dark:fill-slate-300 font-medium"
+            fontSize={layout.fontSize}
           >
             {node.label}
           </text>
           <text
             x={node.x < width / 2 ? node.x + node.width + 10 : node.x - 10}
-            y={node.y + node.height / 2 + 16}
+            y={node.y + node.height / 2 + (layout.fontSize + 4)}
             textAnchor={node.x < width / 2 ? 'start' : 'end'}
             dominantBaseline="middle"
-            className="fill-slate-500 dark:fill-slate-400 text-xs"
+            className="fill-slate-500 dark:fill-slate-400"
+            fontSize={layout.valueTextSize}
           >
             ${node.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </text>
