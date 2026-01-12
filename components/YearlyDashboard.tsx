@@ -2,11 +2,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { fetchYearlySummary } from '../services/api';
-import { YearlySummaryResponse } from '../types';
+import { fetchYearlySummary, fetchTransactions } from '../services/api';
+import { YearlySummaryResponse, Transaction } from '../types';
 import { SummaryCard } from './SummaryCard';
 import { SankeyChart } from './SankeyChart';
-import { COLORS } from '../utils/analytics';
+import { COLORS, getIncomesByCategory, getExpensesByCategory } from '../utils/analytics';
 
 interface YearlyDashboardProps {
   selectedYear: string;
@@ -30,6 +30,7 @@ const PercentIcon = () => (
 
 export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }) => {
   const [data, setData] = useState<YearlySummaryResponse | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeMonthIndex, setActiveMonthIndex] = useState<number | null>(null);
@@ -42,6 +43,10 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       try {
         const result = await fetchYearlySummary(selectedYear);
         setData(result);
+        
+        // Fetch transactions for the selected year
+        const transactionsResult = await fetchTransactions(selectedYear);
+        setTransactions(transactionsResult.transactions);
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Failed to fetch yearly summary');
@@ -52,6 +57,25 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
 
     loadYearlyData();
   }, [selectedYear]);
+  
+  // Fetch transactions when active month changes
+  useEffect(() => {
+    if (!data || activeMonthIndex === null) return;
+    
+    const loadMonthTransactions = async () => {
+      try {
+        const monthData = data.monthly_breakdown[activeMonthIndex];
+        if (monthData) {
+          const transactionsResult = await fetchTransactions(monthData.month);
+          setTransactions(transactionsResult.transactions);
+        }
+      } catch (err: any) {
+        console.error('Failed to fetch month transactions:', err);
+      }
+    };
+    
+    loadMonthTransactions();
+  }, [activeMonthIndex, data]);
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -74,32 +98,32 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   }, [data]);
 
   const sankeyData = useMemo(() => {
-    if (!data) return { nodes: [], links: [] };
+    if (!data || !transactions.length) return { nodes: [], links: [] };
     
-    let expenseCategories;
+    // Get income and expense categories from actual transactions
+    const incomes = getIncomesByCategory(transactions);
+    const expenses = getExpensesByCategory(transactions);
+    
     let savingsAmount;
-    let incomeAmount;
 
     // Determine if we are showing yearly data or specific month data
     if (activeMonthIndex !== null && data.monthly_breakdown[activeMonthIndex]) {
         const monthData = data.monthly_breakdown[activeMonthIndex];
-        expenseCategories = monthData.expenses_by_category;
         savingsAmount = monthData.total_savings;
-        incomeAmount = monthData.total_salary;
     } else {
-        expenseCategories = data.yearly_expenses_by_category;
         savingsAmount = data.yearly_total_savings;
-        incomeAmount = data.yearly_total_income;
     }
     
-    // Create nodes: income source (left), total income (middle), expenses & savings (right)
+    // Create nodes: income sources (left), total income (middle), expenses & savings (right)
     const nodes = [];
     
-    // Add single income source node (left side)
-    nodes.push({
-      id: 'income-source',
-      label: 'Income Sources',
-      color: '#10b981'
+    // Add income source category nodes (left side)
+    incomes.forEach((cat) => {
+      nodes.push({
+        id: cat.name,
+        label: cat.name,
+        color: cat.color
+      });
     });
     
     // Add total income node (middle)
@@ -119,23 +143,25 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     }
     
     // Add expense category nodes (right side - will appear below)
-    expenseCategories.forEach((c, index) => {
+    expenses.forEach((cat) => {
       nodes.push({
-        id: c.category_name,
-        label: c.category_name,
-        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+        id: cat.name,
+        label: cat.name,
+        color: categoryColorMap[cat.name] || cat.color
       });
     });
     
-    // Create links: income source -> total income -> expenses & savings
+    // Create links: income sources -> total income -> expenses & savings
     const links = [];
     
-    // Link from income source to total income
-    links.push({
-      source: 'income-source',
-      target: 'income',
-      value: incomeAmount,
-      color: '#10b981'
+    // Links from income sources to total income
+    incomes.forEach((cat) => {
+      links.push({
+        source: cat.name,
+        target: 'income',
+        value: cat.value,
+        color: cat.color
+      });
     });
     
     // Link from total income to savings if positive
@@ -149,17 +175,17 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     }
     
     // Links from total income to expense categories
-    expenseCategories.forEach((c, index) => {
+    expenses.forEach((cat) => {
       links.push({
         source: 'income',
-        target: c.category_name,
-        value: c.total,
-        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+        target: cat.name,
+        value: cat.value,
+        color: categoryColorMap[cat.name] || cat.color
       });
     });
 
     return { nodes, links };
-  }, [data, activeMonthIndex, categoryColorMap]);
+  }, [data, transactions, activeMonthIndex, categoryColorMap]);
 
   const sankeyChartTitle = useMemo(() => {
     if (activeMonthIndex !== null && data?.monthly_breakdown[activeMonthIndex]) {
