@@ -203,59 +203,56 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
             />
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Monthly Trend Bar Chart */}
-            <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Monthly Income vs Expenses</h3>
-                <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                   Hover to filter categories
-                </span>
-              </div>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={chartData} 
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    onMouseMove={(state: any) => {
-                      if (state.isTooltipActive && state.activeTooltipIndex !== undefined) {
-                        setActiveMonthIndex(state.activeTooltipIndex);
-                      } else {
-                        setActiveMonthIndex(null);
-                      }
-                    }}
-                    onMouseLeave={() => setActiveMonthIndex(null)}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="month" tickFormatter={(val) => val.split('-')[1]} stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" tickFormatter={(val) => `$${val}`} />
-                    <Tooltip 
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
-                      contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
-                      itemStyle={{ color: '#f8fafc' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expense" name="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+          {/* Income Flow Sankey Diagram - Full Width */}
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
+              {sankeyChartTitle}
+            </h3>
+            <div className="flex-1 min-h-[450px] w-full flex items-center justify-center overflow-x-auto">
+              <SankeyChart
+                nodes={sankeyData.nodes}
+                links={sankeyData.links}
+                width={900}
+                height={450}
+              />
             </div>
+          </div>
 
-             {/* Income Flow Sankey Diagram */}
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
-                {sankeyChartTitle}
-              </h3>
-              <div className="flex-1 min-h-[450px] w-full flex items-center justify-center overflow-x-auto">
-                <SankeyChart
-                  nodes={sankeyData.nodes}
-                  links={sankeyData.links}
-                  width={700}
-                  height={450}
-                />
-              </div>
+          {/* Monthly Income vs Expenses Chart */}
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Monthly Income vs Expenses</h3>
+              <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                 Hover to filter categories
+              </span>
+            </div>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={chartData} 
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  onMouseMove={(state: any) => {
+                    if (state.isTooltipActive && state.activeTooltipIndex !== undefined) {
+                      setActiveMonthIndex(state.activeTooltipIndex);
+                    } else {
+                      setActiveMonthIndex(null);
+                    }
+                  }}
+                  onMouseLeave={() => setActiveMonthIndex(null)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" tickFormatter={(val) => val.split('-')[1]} stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" tickFormatter={(val) => `$${val}`} />
+                  <Tooltip 
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}
+                    itemStyle={{ color: '#f8fafc' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expense" name="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 

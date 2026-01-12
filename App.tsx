@@ -873,70 +873,67 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                       />
                     </div>
 
-                    {/* Main Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Daily Trend */}
-                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Daily Spending Trend</h3>
-                        <div className="h-72">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={dateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                              <defs>
-                                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor={chartColors.areaGradientStart} stopOpacity={0.8}/>
-                                  <stop offset="95%" stopColor={chartColors.areaGradientStart} stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                              <XAxis 
-                                dataKey="date" 
-                                tickFormatter={(val) => val.split('-')[2]} 
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: chartColors.text, fontSize: 12 }}
-                                dy={10}
-                              />
-                              <YAxis 
-                                axisLine={false} 
-                                tickLine={false}
-                                tick={{ fill: chartColors.text, fontSize: 12 }}
-                                tickFormatter={(val) => `$${val}`}
-                              />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: chartColors.tooltipBg,
-                                  borderColor: chartColors.grid,
-                                  borderRadius: '8px', 
-                                  color: chartColors.tooltipText,
-                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
-                                }}
-                                itemStyle={{ color: chartColors.tooltipText }}
-                                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Spent']}
-                              />
-                              <Area 
-                                type="monotone" 
-                                dataKey="amount" 
-                                stroke={chartColors.areaStroke} 
-                                fillOpacity={1} 
-                                fill="url(#colorAmount)" 
-                                strokeWidth={2} 
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
+                    {/* Income Flow Sankey Diagram - Full Width */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Flow</h3>
+                      <div className="h-96 w-full flex items-center justify-center overflow-x-auto">
+                        <SankeyChart
+                          nodes={monthlySankeyData.nodes}
+                          links={monthlySankeyData.links}
+                          width={900}
+                          height={380}
+                        />
                       </div>
+                    </div>
 
-                      {/* Income Flow Sankey Diagram */}
-                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Flow</h3>
-                        <div className="h-96 w-full flex items-center justify-center overflow-x-auto">
-                          <SankeyChart
-                            nodes={monthlySankeyData.nodes}
-                            links={monthlySankeyData.links}
-                            width={600}
-                            height={380}
-                          />
-                        </div>
+                    {/* Daily Spending Trend */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Daily Spending Trend</h3>
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={dateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={chartColors.areaGradientStart} stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor={chartColors.areaGradientStart} stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
+                            <XAxis 
+                              dataKey="date" 
+                              tickFormatter={(val) => val.split('-')[2]} 
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: chartColors.text, fontSize: 12 }}
+                              dy={10}
+                            />
+                            <YAxis 
+                              axisLine={false} 
+                              tickLine={false}
+                              tick={{ fill: chartColors.text, fontSize: 12 }}
+                              tickFormatter={(val) => `$${val}`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: chartColors.tooltipBg,
+                                borderColor: chartColors.grid,
+                                borderRadius: '8px', 
+                                color: chartColors.tooltipText,
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                              }}
+                              itemStyle={{ color: chartColors.tooltipText }}
+                              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Spent']}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="amount" 
+                              stroke={chartColors.areaStroke} 
+                              fillOpacity={1} 
+                              fill="url(#colorAmount)" 
+                              strokeWidth={2} 
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
 
