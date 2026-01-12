@@ -95,6 +95,8 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   });
   
   const monthInputRef = useRef<HTMLInputElement>(null);
+  const sankeyContainerRef = useRef<HTMLDivElement>(null);
+  const [sankeyWidth, setSankeyWidth] = useState(900);
   
   // Yearly View State
   const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -167,6 +169,19 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Measure sankey container width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (sankeyContainerRef.current) {
+        setSankeyWidth(sankeyContainerRef.current.offsetWidth - 48); // Subtract padding
+      }
+    };
+    
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
