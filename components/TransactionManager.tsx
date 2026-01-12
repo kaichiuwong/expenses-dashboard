@@ -75,13 +75,13 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     }
 
     // Create CSV content
-    const headers = ['Date', 'Name', 'Category', 'Amount'];
+    const headers = ['Date', 'Category', 'Name', 'Amount'];
     const csvRows = [
       headers.join(','),
       ...sortedTransactions.map(t => [
         t.trx_date,
-        `"${t.name.replace(/"/g, '""')}"`, // Escape quotes in name
         `"${t.category.name.replace(/"/g, '""')}"`,
+        `"${t.name.replace(/"/g, '""')}"`, // Escape quotes in name
         t.amount.toFixed(2)
       ].join(','))
     ];
@@ -221,10 +221,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                         Date
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Name
+                        Category
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Category
+                        Name
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Amount
@@ -232,24 +232,31 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                    {sortedTransactions.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">
-                          {transaction.trx_date}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
-                          {transaction.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-                            {transaction.category.name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-slate-800 dark:text-slate-100">
-                          ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
+                    {sortedTransactions.map((transaction) => {
+                      const isPositive = transaction.amount > 0;
+                      const amountColorClass = isPositive 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : 'text-green-600 dark:text-green-400';
+                      
+                      return (
+                        <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">
+                            {transaction.trx_date}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                              {transaction.category.name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
+                            {transaction.name}
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${amountColorClass}`}>
+                            ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
