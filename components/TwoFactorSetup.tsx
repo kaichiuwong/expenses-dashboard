@@ -74,7 +74,26 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
         setError('Verification failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to verify code');
+      // Extract error message from JSON or use the error message directly
+      let errorMessage = 'Failed to verify code';
+      
+      if (err.message) {
+        // Try to parse as JSON first
+        if (err.message.startsWith('{')) {
+          try {
+            const jsonError = JSON.parse(err.message);
+            errorMessage = jsonError.error || jsonError.message || errorMessage;
+          } catch (parseError) {
+            // Failed to parse JSON, use default message
+            errorMessage = 'Invalid verification code. Please try again.';
+          }
+        } else {
+          // Not JSON, use the message directly
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
