@@ -1,4 +1,4 @@
-# Expenses Dashboard
+# Expensify
 
 A comprehensive financial dashboard visualizing monthly expenses by category, date, and weekday using interactive charts. Built with React, Tailwind CSS, and Recharts.
 

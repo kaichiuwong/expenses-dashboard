@@ -92,7 +92,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors">
+    <div className="flex flex-col justify-center py-8 sm:px-6 lg:px-8 transition-colors">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 bg-green-600 dark:bg-green-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-500/30">
@@ -132,7 +132,11 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                 
                 {qrCode && (
                   <div className="bg-white p-4 rounded-lg inline-block shadow-inner">
-                    <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 mx-auto" />
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}`} 
+                      alt="2FA QR Code" 
+                      className="w-48 h-48 mx-auto" 
+                    />
                   </div>
                 )}
 

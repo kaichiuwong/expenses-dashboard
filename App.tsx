@@ -683,7 +683,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             )}
 
             {viewMode === '2fa-setup' && (
-              <div className="flex items-center justify-center">
+              <div className="flex items-start justify-center py-8">
                 <div className="w-full max-w-md">
                   <TwoFactorSetup 
                     onComplete={() => setViewMode('monthly')} 

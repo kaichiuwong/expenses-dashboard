@@ -36,7 +36,7 @@ export const registerLocalPasskey = async (email: string): Promise<boolean> => {
     const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
       challenge,
       rp: {
-        name: 'Expenses Dashboard',
+        name: 'Expensify',
         id: window.location.hostname, // Must match current domain
       },
       user: {
