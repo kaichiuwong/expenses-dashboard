@@ -144,13 +144,13 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
                     Can't scan? Enter this code manually:
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <code className="text-sm font-mono text-slate-900 dark:text-white bg-white dark:bg-slate-800 px-3 py-1 rounded border border-slate-200 dark:border-slate-600">
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-sm font-mono text-slate-900 dark:text-white bg-white dark:bg-slate-800 px-3 py-1 rounded border border-slate-200 dark:border-slate-600 break-all overflow-hidden">
                       {secret}
                     </code>
                     <button
                       onClick={() => copyToClipboard(secret, 'secret')}
-                      className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                      className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex-shrink-0"
                       title="Copy secret"
                     >
                       {copiedSecret ? <CheckIcon /> : <CopyIcon />}
