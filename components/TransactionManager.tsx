@@ -36,6 +36,9 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [isHeaderManuallyExpanded, setIsHeaderManuallyExpanded] = useState(false);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Fetch all transactions
   useEffect(() => {
@@ -55,6 +58,49 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
     loadAllTransactions();
   }, []);
+
+  // Handle scroll for collapsible header (mobile only)
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    let lastScrollTop = 0;
+    const handleScroll = () => {
+      // Only apply on mobile screens
+      if (window.innerWidth >= 768) {
+        setIsHeaderCollapsed(false);
+        return;
+      }
+
+      const scrollTop = container.scrollTop;
+      
+      // If manually expanded, don't auto-collapse
+      if (isHeaderManuallyExpanded) return;
+
+      // Collapse when scrolling down past 50px
+      if (scrollTop > 50 && scrollTop > lastScrollTop) {
+        setIsHeaderCollapsed(true);
+      } else if (scrollTop < 20) {
+        // Expand when near top
+        setIsHeaderCollapsed(false);
+      }
+      
+      lastScrollTop = scrollTop;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isHeaderManuallyExpanded]);
+
+  // Toggle header expansion
+  const toggleHeaderExpansion = () => {
+    if (isHeaderCollapsed) {
+      setIsHeaderCollapsed(false);
+      setIsHeaderManuallyExpanded(true);
+      // Reset manual expansion after 2 seconds
+      setTimeout(() => setIsHeaderManuallyExpanded(false), 2000);
+    }
+  };
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
@@ -178,47 +224,65 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+      <div 
+        className={`bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 transition-all duration-300 ${
+          isHeaderCollapsed ? 'py-2 cursor-pointer' : 'py-4'
+        }`}
+        onClick={isHeaderCollapsed ? toggleHeaderExpansion : undefined}
+      >
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Transaction Manager</h1>
-          
-          {/* Search and Export Section */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            {/* Search Bar */}
-            <div className="relative flex-1 w-full sm:max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, category, date, or amount..."
-                className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  <XCircleIcon />
-                </button>
-              )}
-            </div>
-
-            {/* Export Button */}
+          {/* Title and Export Button */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className={`font-bold text-slate-900 dark:text-white transition-all duration-300 ${
+              isHeaderCollapsed ? 'text-lg' : 'text-2xl'
+            }`}>
+              Transaction Manager
+            </h1>
             <button
-              onClick={handleExportCSV}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExportCSV();
+              }}
               disabled={sortedTransactions.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
+              className={`flex items-center gap-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium whitespace-nowrap ${
+                isHeaderCollapsed ? 'px-3 py-1 text-sm' : 'px-4 py-2'
+              }`}
             >
               <DownloadIcon />
-              Export CSV
+              <span className={isHeaderCollapsed ? 'hidden sm:inline' : ''}>Export CSV</span>
             </button>
           </div>
+          
+          {/* Collapsible Content */}
+          <div className={`transition-all duration-300 overflow-hidden ${
+            isHeaderCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+          }`}>
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative w-full sm:max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <SearchIcon />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name, category, date, or amount..."
+                  className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    <XCircleIcon />
+                  </button>
+                )}
+              </div>
+            </div>
 
-          {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Total Transactions
@@ -262,7 +326,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
       </div>
 
       {/* Transaction Table */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div ref={tableContainerRef} className="flex-1 overflow-auto px-6 py-4">
         <div className="max-w-7xl mx-auto">
           {sortedTransactions.length === 0 ? (
             <div className="text-center py-12">
