@@ -67,9 +67,11 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     const handleScroll = () => {
       const currentScrollY = scrollContainer.scrollTop;
       
-      // Only collapse if scrolling down and past 50px
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      // Collapse when scrolling down past 100px, expand when at top
+      if (currentScrollY > 100 && !isHeaderCollapsed) {
         setIsHeaderCollapsed(true);
+      } else if (currentScrollY <= 20 && isHeaderCollapsed) {
+        setIsHeaderCollapsed(false);
       }
       
       setLastScrollY(currentScrollY);
@@ -77,7 +79,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [isHeaderCollapsed]);
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
