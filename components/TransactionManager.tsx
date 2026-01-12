@@ -218,12 +218,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
           </div>
 
           {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Total Transactions
               </div>
-              <div className="text-xl font-bold text-slate-900 dark:text-white">
+              <div className="text-xl font-bold text-slate-900 dark:text-white break-words">
                 {summaryStats.count.toLocaleString()}
               </div>
             </div>
@@ -231,7 +231,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Total Amount
               </div>
-              <div className={`text-xl font-bold ${
+              <div className={`text-xl font-bold break-words ${
                 summaryStats.total > 0 
                   ? 'text-red-600 dark:text-red-400' 
                   : summaryStats.total < 0 
@@ -246,7 +246,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Average Amount
               </div>
-              <div className={`text-xl font-bold ${
+              <div className={`text-xl font-bold break-words ${
                 summaryStats.average > 0 
                   ? 'text-red-600 dark:text-red-400' 
                   : summaryStats.average < 0 
