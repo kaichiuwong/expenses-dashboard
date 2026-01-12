@@ -118,6 +118,17 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
     setCookie('targetSavings', targetSavings.toString());
   }, [targetSavings]);
 
+  // Update document title based on view mode
+  useEffect(() => {
+    const titles = {
+      monthly: 'Monthly Expenses',
+      yearly: 'Yearly Expenses',
+      regular: 'Template Transactions',
+      categories: 'Categories'
+    };
+    document.title = titles[viewMode];
+  }, [viewMode]);
+
   const loadData = useCallback(async () => {
     // Only load transaction list data if in monthly view
     if (viewMode !== 'monthly') return;
