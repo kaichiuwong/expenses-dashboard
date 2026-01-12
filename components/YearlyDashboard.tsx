@@ -125,10 +125,10 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     // Create nodes: income sources (left), total income (middle), expenses & savings (right)
     const nodes = [];
     
-    // Add income source category nodes (left side)
+    // Add income source category nodes (left side) with income- prefix
     incomes.forEach((cat) => {
       nodes.push({
-        id: cat.name,
+        id: `income-${cat.name}`,
         label: cat.name,
         color: cat.color
       });
@@ -150,10 +150,10 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       });
     }
     
-    // Add expense category nodes (right side - will appear below)
+    // Add expense category nodes (right side) with expense- prefix
     expenses.forEach((cat) => {
       nodes.push({
-        id: cat.name,
+        id: `expense-${cat.name}`,
         label: cat.name,
         color: categoryColorMap[cat.name] || cat.color
       });
@@ -165,7 +165,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     // Links from income sources to total income
     incomes.forEach((cat) => {
       links.push({
-        source: cat.name,
+        source: `income-${cat.name}`,
         target: 'income',
         value: cat.value,
         color: cat.color
@@ -186,7 +186,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     expenses.forEach((cat) => {
       links.push({
         source: 'income',
-        target: cat.name,
+        target: `expense-${cat.name}`,
         value: cat.value,
         color: categoryColorMap[cat.name] || cat.color
       });
