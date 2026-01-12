@@ -210,9 +210,8 @@ export const fetchTransactions = async (month: string): Promise<TransactionRespo
 export const fetchAllTransactions = async (): Promise<TransactionResponse> => {
   const url = `${BASE_URL}/transaction`;
   const response = await fetch(url, { 
-    method: 'POST', 
-    headers: await getHeaders(),
-    body: JSON.stringify({})
+    method: 'GET', 
+    headers: await getHeaders()
   });
   if (!response.ok) throw new Error(`Error fetching all transactions: ${response.statusText}`);
   return response.json();
