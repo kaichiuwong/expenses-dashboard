@@ -4,6 +4,7 @@ import { verify2FA } from '../services/api';
 interface TwoFactorVerificationProps {
   onVerified: () => void;
   onCancel: () => void;
+  email?: string;
 }
 
 const LockIcon = () => (
@@ -19,7 +20,7 @@ const BackIcon = () => (
   </svg>
 );
 
-export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ onVerified, onCancel }) => {
+export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ onVerified, onCancel, email }) => {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ on
     setError(null);
 
     try {
-      const response = await verify2FA(code, false);
+      const response = await verify2FA(code, false, email);
       
       if (response.verified) {
         if (response.usedBackupCode) {

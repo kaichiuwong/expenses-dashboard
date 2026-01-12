@@ -406,7 +406,8 @@ export const enable2FA = async (): Promise<{
 
 export const verify2FA = async (
   code: string,
-  enableAfterVerify: boolean
+  enableAfterVerify: boolean,
+  email?: string
 ): Promise<{
   verified: boolean;
   twoFactorEnabled: boolean;
@@ -416,7 +417,7 @@ export const verify2FA = async (
   const url = `${BASE_URL}/verify-2fa`;
   const response = await fetch(url, {
     method: 'POST',
-    headers: await getHeaders(),
+    headers: await getHeaders(email),
     body: JSON.stringify({ code, enableAfterVerify })
   });
   if (!response.ok) throw new Error(await response.text() || response.statusText);

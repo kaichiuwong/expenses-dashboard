@@ -132,7 +132,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   // Show 2FA verification screen
   if (step === '2fa-verify') {
-    return <TwoFactorVerification onVerified={handle2FAVerified} onCancel={handle2FACancel} />;
+    return <TwoFactorVerification onVerified={handle2FAVerified} onCancel={handle2FACancel} email={email} />;
   }
 
   return (
