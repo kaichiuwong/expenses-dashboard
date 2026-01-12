@@ -51,10 +51,14 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       }
     });
     
-    // For the income node, use incoming links only
-    const incomeValue = links
+    // For the income node, calculate both incoming and outgoing to use the max
+    const incomeIncoming = links
       .filter(l => l.target === 'income')
       .reduce((sum, link) => sum + link.value, 0);
+    const incomeOutgoing = links
+      .filter(l => l.source === 'income')
+      .reduce((sum, link) => sum + link.value, 0);
+    const incomeValue = Math.max(incomeIncoming, incomeOutgoing);
     if (incomeValue > 0) {
       nodeValues.set('income', incomeValue);
     }
