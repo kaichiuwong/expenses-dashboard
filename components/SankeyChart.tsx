@@ -27,6 +27,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   height = 400 
 }) => {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [hoveredLinkIndex, setHoveredLinkIndex] = useState<number | null>(null);
 
   const layout = useMemo(() => {
     // Don't limit height, use requested height to allow proper display
@@ -50,6 +51,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const totalValue = Math.max(...Array.from(nodeValues.values()));
     const availableHeight = constrainedHeight - padding * 2;
+    
+    // Calculate total income for percentage calculation
+    const totalIncome = Array.from(nodeValues.values())[0] || totalValue;
     
     // Calculate dynamic text size based on number of nodes and available space
     const targetNodeCount = targetNodes.length;
@@ -166,25 +170,53 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       nodes: allPositions,
       links: linkPaths,
       fontSize,
-      valueTextSize
+      valueTextSize,
+      totalIncome
     };
   }, [nodes, links, width, height]);
 
   return (
     <svg width={width} height={height} className="overflow-visible" style={{ display: 'block' }}>
       {/* Draw links first (behind nodes) */}
-      {layout.links.map((link, i) => (
-        <g key={`link-${i}`}>
-          <path
-            d={link!.path}
-            fill={link!.color}
-            opacity={0.5}
-            className="transition-opacity hover:opacity-80"
-          >
-            <title>{`${link!.source} → ${link!.target}: $${link!.value.toFixed(2)}`}</title>
-          </path>
-        </g>
-      ))}
+      {layout.links.map((link, i) => {
+        const percentage = (link!.value / layout.totalIncome) * 100;
+        const isHovered = hoveredLinkIndex === i;
+        
+        return (
+          <g key={`link-${i}`}>
+            <path
+              d={link!.path}
+              fill={link!.color}
+              opacity={isHovered ? 0.8 : 0.5}
+              className="transition-opacity cursor-pointer"
+              onMouseEnter={() => setHoveredLinkIndex(i)}
+              onMouseLeave={() => setHoveredLinkIndex(null)}
+            >
+              <title>{`${link!.source} → ${link!.target}: $${link!.value.toFixed(2)}`}</title>
+            </path>
+            {isHovered && (
+              <text
+                x={width / 2}
+                y={20}
+                textAnchor="middle"
+                className="fill-slate-700 dark:fill-slate-200 font-semibold"
+                fontSize={13}
+                style={{ pointerEvents: 'none' }}
+              >
+                <tspan className="fill-slate-600 dark:fill-slate-300">
+                  {link!.target}: 
+                </tspan>
+                <tspan className="fill-slate-800 dark:fill-white" dx="5">
+                  ${link!.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </tspan>
+                <tspan className="fill-slate-500 dark:fill-slate-400" dx="5">
+                  ({percentage.toFixed(1)}%)
+                </tspan>
+              </text>
+            )}
+          </g>
+        );
+      })}
       
       {/* Draw nodes */}
       {layout.nodes.map((node, i) => (
