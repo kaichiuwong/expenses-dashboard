@@ -57,14 +57,23 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ on
     } catch (err: any) {
       // Extract error message from JSON or use the error message directly
       let errorMessage = 'Verification failed. Please try again.';
+      
       if (err.message) {
-        try {
-          const jsonError = JSON.parse(err.message);
-          errorMessage = jsonError.error || jsonError.message || errorMessage;
-        } catch {
+        // Try to parse as JSON first
+        if (err.message.startsWith('{')) {
+          try {
+            const jsonError = JSON.parse(err.message);
+            errorMessage = jsonError.error || jsonError.message || errorMessage;
+          } catch (parseError) {
+            // Failed to parse JSON, use default message
+            errorMessage = 'Invalid verification code. Please try again.';
+          }
+        } else {
+          // Not JSON, use the message directly
           errorMessage = err.message;
         }
       }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
