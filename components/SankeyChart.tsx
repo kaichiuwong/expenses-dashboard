@@ -217,11 +217,19 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         
         if (!sourceNode || !targetNode) return null;
         
-        // Calculate link height proportional to the node it's flowing from
-        // For flows OUT of the source node, use source node's height as reference
+        // Calculate link height proportional to BOTH source and target nodes
+        // Use the source node's height as reference for outgoing flow
         const sourceNodeValue = nodeValues.get(link.source) || 0;
-        const linkHeightRatio = sourceNodeValue > 0 ? link.value / sourceNodeValue : 0;
-        const linkHeight = Math.max(sourceNode.height * linkHeightRatio, 2);
+        const sourceLinkHeightRatio = sourceNodeValue > 0 ? link.value / sourceNodeValue : 0;
+        const sourceLinkHeight = sourceNode.height * sourceLinkHeightRatio;
+        
+        // Use the target node's height as reference for incoming flow
+        const targetNodeValue = nodeValues.get(link.target) || 0;
+        const targetLinkHeightRatio = targetNodeValue > 0 ? link.value / targetNodeValue : 0;
+        const targetLinkHeight = targetNode.height * targetLinkHeightRatio;
+        
+        // Use the average to ensure smooth transitions
+        const linkHeight = Math.max((sourceLinkHeight + targetLinkHeight) / 2, 2);
         
         // Get current flow positions
         const sourceY = nodeFlowY.get(link.source) || sourceNode.y;
