@@ -180,10 +180,23 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Transaction Manager</h1>
+          {/* Title Bar with Export Button */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transaction Manager</h1>
+            
+            {/* Export Button */}
+            <button
+              onClick={handleExportCSV}
+              disabled={sortedTransactions.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
+            >
+              <DownloadIcon />
+              Export CSV
+            </button>
+          </div>
           
-          {/* Search and Export Section */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          {/* Search Section */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             {/* Search Bar */}
             <div className="relative flex-1 w-full sm:max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -205,16 +218,6 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                 </button>
               )}
             </div>
-
-            {/* Export Button */}
-            <button
-              onClick={handleExportCSV}
-              disabled={sortedTransactions.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
-            >
-              <DownloadIcon />
-              Export CSV
-            </button>
           </div>
 
           {/* Summary Stats */}
