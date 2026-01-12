@@ -191,12 +191,10 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   const monthlySankeyData = useMemo(() => {
     const expenses = getExpensesByCategory(transactions);
     
-    // Create nodes
-    const nodes = [
-      { id: 'income', label: 'Income', color: '#10b981' }
-    ];
+    // Create nodes: expenses (left), income (middle), savings (right)
+    const nodes = [];
     
-    // Add category nodes
+    // Add expense category nodes (left side - negative)
     expenses.forEach((cat) => {
       nodes.push({
         id: cat.name,
@@ -205,7 +203,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       });
     });
     
-    // Add savings node if positive
+    // Add income node (middle)
+    nodes.push({
+      id: 'income',
+      label: 'Income',
+      color: '#10b981'
+    });
+    
+    // Add savings node if positive (right side)
     if (savings > 0) {
       nodes.push({
         id: 'SAVINGS',
@@ -214,15 +219,20 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       });
     }
     
-    // Create links from income to categories
-    const links = expenses.map((cat) => ({
-      source: 'income',
-      target: cat.name,
-      value: cat.value,
-      color: cat.color
-    }));
+    // Create links: categories -> income, income -> savings
+    const links = [];
     
-    // Add link to savings if positive
+    // Links from expense categories to income
+    expenses.forEach((cat) => {
+      links.push({
+        source: cat.name,
+        target: 'income',
+        value: cat.value,
+        color: cat.color
+      });
+    });
+    
+    // Link from income to savings if positive
     if (savings > 0) {
       links.push({
         source: 'income',

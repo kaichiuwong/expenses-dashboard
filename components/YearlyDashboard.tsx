@@ -92,12 +92,10 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
         incomeAmount = data.yearly_total_income;
     }
     
-    // Create nodes
-    const nodes = [
-      { id: 'income', label: 'Income', color: '#10b981' }
-    ];
+    // Create nodes: expenses (left), income (middle), savings (right)
+    const nodes = [];
     
-    // Add category nodes
+    // Add expense category nodes (left side)
     sourceCategories.forEach((c, index) => {
       nodes.push({
         id: c.category_name,
@@ -106,7 +104,14 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       });
     });
     
-    // Add savings node if positive
+    // Add income node (middle)
+    nodes.push({
+      id: 'income',
+      label: 'Income',
+      color: '#10b981'
+    });
+    
+    // Add savings node if positive (right side)
     if (savingsAmount > 0) {
       nodes.push({
         id: 'SAVINGS',
@@ -115,15 +120,20 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       });
     }
     
-    // Create links from income to categories
-    const links = sourceCategories.map((c, index) => ({
-      source: 'income',
-      target: c.category_name,
-      value: c.total,
-      color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
-    }));
+    // Create links: categories -> income, income -> savings
+    const links = [];
     
-    // Add link to savings if positive
+    // Links from expense categories to income
+    sourceCategories.forEach((c, index) => {
+      links.push({
+        source: c.category_name,
+        target: 'income',
+        value: c.total,
+        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+      });
+    });
+    
+    // Link from income to savings if positive
     if (savingsAmount > 0) {
       links.push({
         source: 'income',
