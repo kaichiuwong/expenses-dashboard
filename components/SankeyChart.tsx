@@ -208,9 +208,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       nodeFlowY.set(node.id, node.y);
     });
     
-    // Create link paths - sorted by value to stack flows properly
+    // Create link paths - maintain original order for proper stacking
     const linkPaths = links
-      .sort((a, b) => b.value - a.value)
       .map(link => {
         const sourceNode = allPositions.find(n => n.id === link.source);
         const targetNode = allPositions.find(n => n.id === link.target);
