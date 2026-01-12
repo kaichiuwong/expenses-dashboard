@@ -39,11 +39,25 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const nodeGap = 8;
     
     // Calculate total values for each node from links
+    // For source nodes, sum outgoing links; for target nodes, sum incoming links
+    // For middle nodes (income), use incoming links only to avoid double counting
     const nodeValues = new Map<string, number>();
     links.forEach(link => {
+      // Only add to source value (outgoing)
       nodeValues.set(link.source, (nodeValues.get(link.source) || 0) + link.value);
-      nodeValues.set(link.target, (nodeValues.get(link.target) || 0) + link.value);
+      // Only add to target value if it's not the income node (to avoid double counting)
+      if (link.target !== 'income') {
+        nodeValues.set(link.target, (nodeValues.get(link.target) || 0) + link.value);
+      }
     });
+    
+    // For the income node, use incoming links only
+    const incomeValue = links
+      .filter(l => l.target === 'income')
+      .reduce((sum, link) => sum + link.value, 0);
+    if (incomeValue > 0) {
+      nodeValues.set('income', incomeValue);
+    }
     
     // Separate nodes into three columns: income sources (left), total income (middle), expenses & savings (right)
     const incomeNode = nodes.find(n => n.id === 'income');
@@ -104,8 +118,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       return position;
     });
     
-    // Position middle node (income)
-    const incomeValue = nodeValues.get('income') || 0;
+    // Position middle node (income) - value already calculated above
     const incomeHeight = (incomeValue / totalValue) * availableHeight * 0.8;
     const middlePosition = incomeNode ? [{
       id: incomeNode.id,
