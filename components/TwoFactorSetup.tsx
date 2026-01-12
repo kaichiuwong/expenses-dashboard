@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { enable2FA, verify2FA } from '../services/api';
+import { enable2FA, verify2FA, checkUserEmail, disable2FA } from '../services/api';
 
 interface TwoFactorSetupProps {
   onComplete: () => void;
@@ -26,7 +26,7 @@ const CopyIcon = () => (
 );
 
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'success'>('loading');
+  const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'success' | 'already-enabled'>('loading');
   const [qrCode, setQrCode] = useState('');
   const [secret, setSecret] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -35,6 +35,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
   const [error, setError] = useState<string | null>(null);
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
 
   useEffect(() => {
     initiate2FA();
@@ -42,6 +43,18 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
 
   const initiate2FA = async () => {
     try {
+      // First check if 2FA is already enabled
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.email) {
+        const checkResponse = await checkUserEmail(user.email);
+        if (checkResponse.user?.two_factor_enabled) {
+          setIs2FAEnabled(true);
+          setStep('already-enabled');
+          return;
+        }
+      }
+      
+      // If not enabled, proceed with setup
       const response = await enable2FA();
       setQrCode(response.qrCode);
       setSecret(response.secret);
@@ -89,6 +102,38 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
           }
         } else {
           // Not JSON, use the message directly
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await disable2FA();
+      setStep('success');
+      setTimeout(() => {
+        onComplete();
+      }, 2000);
+    } catch (err: any) {
+      let errorMessage = 'Failed to disable 2FA';
+      
+      if (err.message) {
+        if (err.message.startsWith('{')) {
+          try {
+            const jsonError = JSON.parse(err.message);
+            errorMessage = jsonError.error || jsonError.message || errorMessage;
+          } catch (parseError) {
+            errorMessage = err.message;
+          }
+        } else {
           errorMessage = err.message;
         }
       }
@@ -270,6 +315,47 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
             </form>
           )}
 
+          {step === 'already-enabled' && (
+            <div className="space-y-6">
+              <div className="text-center py-4">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
+                  <svg className="h-8 w-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                  Two-Factor Authentication is Enabled
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Your account is protected with two-factor authentication.
+                </p>
+              </div>
+
+              {error && (
+                <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-4">
+                  <p className="text-sm text-red-700 dark:text-red-300 text-center">{error}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <button
+                  onClick={handleDisable2FA}
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading ? 'Disabling...' : 'Disable Two-Factor Authentication'}
+                </button>
+                <button
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
+
           {step === 'success' && (
             <div className="text-center py-8">
               <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
@@ -278,10 +364,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                Two-Factor Authentication Enabled!
+                {is2FAEnabled ? 'Two-Factor Authentication Disabled!' : 'Two-Factor Authentication Enabled!'}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Your account is now more secure. Redirecting...
+                {is2FAEnabled ? 'Your account no longer uses two-factor authentication.' : 'Your account is now more secure.'} Redirecting...
               </p>
             </div>
           )}

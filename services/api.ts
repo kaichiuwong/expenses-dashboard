@@ -423,5 +423,12 @@ export const verify2FA = async (
   return response.json();
 };
 
+export const disable2FA = async (): Promise<{ success: boolean; message: string }> => {
+  const url = `${BASE_URL}/disable-2fa`;
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders() });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  return response.json();
+};
+
 // Export base64URLToBuffer for component usage if needed (e.g. converting challenge)
 export { base64URLToBuffer };
