@@ -55,7 +55,17 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({ on
         setError('Invalid verification code. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Verification failed. Please try again.');
+      // Extract error message from JSON or use the error message directly
+      let errorMessage = 'Verification failed. Please try again.';
+      if (err.message) {
+        try {
+          const jsonError = JSON.parse(err.message);
+          errorMessage = jsonError.error || jsonError.message || errorMessage;
+        } catch {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
