@@ -174,14 +174,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        // Get container width and account for SVG internal padding (50px on each side)
+        // Get container width and subtract SVG internal padding (50px left + 50px right = 100px)
         const containerWidth = sankeyContainerRef.current.clientWidth;
-        setSankeyWidth(containerWidth); // Use full container width, SVG will handle its own padding
+        setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
       }
     };
     
-    // Initial measurement with slight delay to ensure container is rendered
-    const timer = setTimeout(updateWidth, 100);
+    // Initial measurement with delay to ensure container is fully rendered
+    const timer = setTimeout(updateWidth, 300);
     updateWidth();
     
     window.addEventListener('resize', updateWidth);
@@ -189,7 +189,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       clearTimeout(timer);
       window.removeEventListener('resize', updateWidth);
     };
-  }, []);
+  }, [monthlySankeyData]); // Re-measure when data changes
 
   // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);

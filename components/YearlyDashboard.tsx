@@ -91,14 +91,14 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        // Get container width and account for SVG internal padding (50px on each side)
+        // Get container width and subtract SVG internal padding (50px left + 50px right = 100px)
         const containerWidth = sankeyContainerRef.current.clientWidth;
-        setSankeyWidth(containerWidth); // Use full container width, SVG will handle its own padding
+        setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
       }
     };
     
-    // Initial measurement with slight delay to ensure container is rendered
-    const timer = setTimeout(updateWidth, 100);
+    // Initial measurement with delay to ensure container is fully rendered
+    const timer = setTimeout(updateWidth, 300);
     updateWidth();
     
     window.addEventListener('resize', updateWidth);
@@ -106,7 +106,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       clearTimeout(timer);
       window.removeEventListener('resize', updateWidth);
     };
-  }, []);
+  }, [sankeyData]); // Re-measure when data changes
 
   const chartData = useMemo(() => {
     if (!data) return [];
