@@ -202,19 +202,38 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const allPositions = [...leftPositions, ...middlePosition, ...rightPositions];
     
-    // Track vertical position for each node's flows
+    // Track vertical position for each node's flows separately for incoming and outgoing
     const nodeFlowY = new Map<string, number>();
     allPositions.forEach(node => {
       nodeFlowY.set(node.id, node.y);
     });
     
-    // Create link paths - sort by target node Y position to match the visual order
-    const linkPaths = links
-      .sort((a, b) => {
+    // Group links by source to process them together
+    const linksBySource = new Map<string, typeof links>();
+    links.forEach(link => {
+      if (!linksBySource.has(link.source)) {
+        linksBySource.set(link.source, []);
+      }
+      linksBySource.get(link.source)!.push(link);
+    });
+    
+    // Sort links within each source group by target Y position
+    linksBySource.forEach((sourceLinks, source) => {
+      sourceLinks.sort((a, b) => {
         const targetA = allPositions.find(n => n.id === a.target);
         const targetB = allPositions.find(n => n.id === b.target);
         return (targetA?.y || 0) - (targetB?.y || 0);
-      })
+      });
+    });
+    
+    // Flatten back to single array
+    const sortedLinks: typeof links = [];
+    linksBySource.forEach(sourceLinks => {
+      sortedLinks.push(...sourceLinks);
+    });
+    
+    // Create link paths
+    const linkPaths = sortedLinks
       .map(link => {
         const sourceNode = allPositions.find(n => n.id === link.source);
         const targetNode = allPositions.find(n => n.id === link.target);
