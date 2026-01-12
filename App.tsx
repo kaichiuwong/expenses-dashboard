@@ -320,14 +320,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'yearly' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
           >
             <ChartIcon />
-            Yearly Analytics
+            Yearly Expenses
           </button>
           <button 
             onClick={() => setViewMode('regular')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'regular' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
           >
             <TemplatesIcon />
-            Templates
+            Template Transactions
           </button>
           <button 
             onClick={() => setViewMode('categories')}
