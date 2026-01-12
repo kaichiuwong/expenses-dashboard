@@ -121,10 +121,10 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   // Update document title based on view mode
   useEffect(() => {
     const titles = {
-      monthly: 'Monthly Expenses',
-      yearly: 'Yearly Expenses',
-      regular: 'Template Transactions',
-      categories: 'Categories'
+      monthly: 'Expensify - Monthly Expenses',
+      yearly: 'Expensify - Yearly Expenses',
+      regular: 'Expensify - Template Transactions',
+      categories: 'Expensify - Categories'
     };
     document.title = titles[viewMode];
   }, [viewMode]);
@@ -313,7 +313,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'monthly' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
           >
             <DashboardIcon />
-            Monthly Dashboard
+            Monthly Expenses
           </button>
           <button 
             onClick={() => setViewMode('yearly')}
@@ -385,9 +385,9 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         {/* Context Header (Desktop & Mobile) */}
         <header className="h-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-10 sticky top-0">
            <div className="flex items-center">
-                {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Overview</h2>}
-                {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Regular Transactions (Templates)</h2>}
-                {viewMode === 'categories' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Manage Categories</h2>}
+                {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Expenses</h2>}
+                {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Template Transactions</h2>}
+                {viewMode === 'categories' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Categories</h2>}
            </div>
 
            <div className="flex items-center gap-2 sm:gap-3">
