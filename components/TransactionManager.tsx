@@ -231,16 +231,30 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Total Amount
               </div>
-              <div className="text-xl font-bold text-slate-900 dark:text-white">
-                ${summaryStats.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className={`text-xl font-bold ${
+                summaryStats.total > 0 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : summaryStats.total < 0 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-slate-900 dark:text-white'
+              }`}>
+                ${Math.abs(summaryStats.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {summaryStats.total > 0 ? ' DR' : summaryStats.total < 0 ? ' CR' : ''}
               </div>
             </div>
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
                 Average Amount
               </div>
-              <div className="text-xl font-bold text-slate-900 dark:text-white">
-                ${summaryStats.average.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className={`text-xl font-bold ${
+                summaryStats.average > 0 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : summaryStats.average < 0 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-slate-900 dark:text-white'
+              }`}>
+                ${Math.abs(summaryStats.average).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {summaryStats.average > 0 ? ' DR' : summaryStats.average < 0 ? ' CR' : ''}
               </div>
             </div>
           </div>
