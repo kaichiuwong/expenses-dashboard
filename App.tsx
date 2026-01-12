@@ -132,11 +132,11 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   // Update document title based on view mode
   useEffect(() => {
     const titles = {
-      monthly: 'Expensify - Monthly Expenses',
-      yearly: 'Expensify - Yearly Expenses',
-      regular: 'Expensify - Template Transactions',
-      categories: 'Expensify - Categories',
-      '2fa-setup': 'Expensify - Two-Factor Authentication'
+      monthly: 'Expensify',
+      yearly: 'Expensify',
+      regular: 'Expensify',
+      categories: 'Expensify',
+      '2fa-setup': 'Expensify'
     };
     document.title = titles[viewMode];
   }, [viewMode]);
