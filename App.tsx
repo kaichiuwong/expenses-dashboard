@@ -174,8 +174,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        const containerWidth = sankeyContainerRef.current.offsetWidth - 48; // Subtract padding
-        setSankeyWidth(Math.max(containerWidth, 600)); // Minimum 600px for readability
+        setSankeyWidth(sankeyContainerRef.current.offsetWidth - 48); // Subtract padding
       }
     };
     
