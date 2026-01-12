@@ -26,6 +26,14 @@ const ArrowDownIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 );
 
+const ChevronUpIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+);
+
 type SortField = 'date' | 'category' | 'name' | 'amount';
 type SortDirection = 'asc' | 'desc';
 
@@ -67,19 +75,17 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     const handleScroll = () => {
       const currentScrollY = scrollContainer.scrollTop;
       
-      // Collapse when scrolling down past 100px, expand when at top
-      if (currentScrollY > 100 && !isHeaderCollapsed) {
+      // Collapse when scrolled down past 50px, expand when at top
+      if (currentScrollY > 50) {
         setIsHeaderCollapsed(true);
-      } else if (currentScrollY <= 20 && isHeaderCollapsed) {
+      } else {
         setIsHeaderCollapsed(false);
       }
-      
-      setLastScrollY(currentScrollY);
     };
 
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [isHeaderCollapsed]);
+  }, []);
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
@@ -205,23 +211,40 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
       <div 
         className={`bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 sm:px-6 transition-all duration-300 ${
-          isHeaderCollapsed ? 'py-2 cursor-pointer' : 'py-4'
+          isHeaderCollapsed ? 'py-2' : 'py-4'
         }`}
-        onClick={() => isHeaderCollapsed && setIsHeaderCollapsed(false)}
       >
         <div className="max-w-7xl mx-auto">
           {isHeaderCollapsed ? (
             // Collapsed Header
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-bold text-slate-900 dark:text-white">Transaction Manager</h1>
-              <div className="text-sm text-slate-600 dark:text-slate-400">
-                {summaryStats.count.toLocaleString()} transactions
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  {summaryStats.count.toLocaleString()} transactions
+                </div>
+                <button
+                  onClick={() => setIsHeaderCollapsed(false)}
+                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label="Expand header"
+                >
+                  <ChevronDownIcon />
+                </button>
               </div>
             </div>
           ) : (
             // Expanded Header
             <>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Transaction Manager</h1>
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transaction Manager</h1>
+                <button
+                  onClick={() => setIsHeaderCollapsed(true)}
+                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label="Collapse header"
+                >
+                  <ChevronUpIcon />
+                </button>
+              </div>
               
               {/* Search Section */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
