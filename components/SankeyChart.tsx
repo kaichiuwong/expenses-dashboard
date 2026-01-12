@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface SankeyNode {
   id: string;
@@ -169,6 +169,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     };
   }, [nodes, links, width, height]);
 
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
   return (
     <svg width={width} height={layout.constrainedHeight} className="overflow-visible">
       {/* Draw links first (behind nodes) */}
@@ -187,7 +189,12 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       
       {/* Draw nodes */}
       {layout.nodes.map((node, i) => (
-        <g key={`node-${i}`}>
+        <g 
+          key={`node-${i}`}
+          onMouseEnter={() => setHoveredNodeId(node.id)}
+          onMouseLeave={() => setHoveredNodeId(null)}
+          className="cursor-pointer"
+        >
           <rect
             x={node.x}
             y={node.y}
@@ -209,16 +216,18 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
           >
             {node.label}
           </text>
-          <text
-            x={node.x < width / 2 ? node.x + node.width + 10 : node.x - 10}
-            y={node.y + node.height / 2 + (layout.fontSize + 4)}
-            textAnchor={node.x < width / 2 ? 'start' : 'end'}
-            dominantBaseline="middle"
-            className="fill-slate-500 dark:fill-slate-400"
-            fontSize={layout.valueTextSize}
-          >
-            ${node.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </text>
+          {hoveredNodeId === node.id && (
+            <text
+              x={node.x < width / 2 ? node.x + node.width + 10 : node.x - 10}
+              y={node.y + node.height / 2 + (layout.fontSize + 4)}
+              textAnchor={node.x < width / 2 ? 'start' : 'end'}
+              dominantBaseline="middle"
+              className="fill-slate-500 dark:fill-slate-400"
+              fontSize={layout.valueTextSize}
+            >
+              ${node.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </text>
+          )}
         </g>
       ))}
     </svg>
