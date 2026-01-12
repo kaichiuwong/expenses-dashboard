@@ -65,6 +65,12 @@ const ChevronLeftIcon = () => (
 const ChevronRightIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 );
+const MenuIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+);
+const XIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+);
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 );
@@ -77,6 +83,7 @@ const ShieldIcon = () => (
 
 const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogout }) => {
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories' | '2fa-setup'>('monthly');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -368,9 +375,113 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         </div>
       </aside>
 
+      {/* --- Mobile Left Sidebar Menu --- */}
+      <aside className={`md:hidden fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex-shrink-0 z-50 transform transition-transform duration-300 ease-in-out ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30 mr-3">
+              $
+            </div>
+            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Expensify</span>
+          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          >
+            <XIcon />
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <button 
+            onClick={() => {
+              setViewMode('monthly');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'monthly' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <DashboardIcon />
+            Monthly Expenses
+          </button>
+          <button 
+            onClick={() => {
+              setViewMode('yearly');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'yearly' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <ChartIcon />
+            Yearly Expenses
+          </button>
+          <button 
+            onClick={() => {
+              setViewMode('regular');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'regular' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <TemplatesIcon />
+            Template Transactions
+          </button>
+          <button 
+            onClick={() => {
+              setViewMode('categories');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'categories' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <FolderIcon />
+            Categories
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
+           <button 
+              onClick={() => {
+                setViewMode('2fa-setup');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === '2fa-setup' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+            >
+              <ShieldIcon />
+              <span>Setup 2FA</span>
+            </button>
+           <button 
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+            <button 
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogoutIcon />
+              <span>Sign Out</span>
+            </button>
+        </div>
+      </aside>
+
+      {/* --- Mobile Menu Overlay --- */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* --- Top Header (Mobile Only) --- */}
       <header className="md:hidden h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 flex-shrink-0 z-20">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors -ml-2"
+            >
+              <MenuIcon />
+            </button>
             <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
               $
             </div>
@@ -552,7 +663,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         </header>
 
         {/* Scrollable Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-8">
             {viewMode === 'yearly' && (
               <YearlyDashboard selectedYear={year} />
             )}
@@ -842,37 +953,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         categoryToEdit={editingCategory}
       />
 
-      {/* --- Mobile Bottom Navigation --- */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center z-30 pb-safe">
-         <button 
-           onClick={() => setViewMode('monthly')}
-           className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${viewMode === 'monthly' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}
-         >
-            <DashboardIcon />
-            <span className="text-[10px] font-medium">Monthly</span>
-         </button>
-         <button 
-           onClick={() => setViewMode('yearly')}
-           className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${viewMode === 'yearly' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}
-         >
-            <ChartIcon />
-            <span className="text-[10px] font-medium">Yearly</span>
-         </button>
-         <button 
-           onClick={() => setViewMode('regular')}
-           className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${viewMode === 'regular' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}
-         >
-            <TemplatesIcon />
-            <span className="text-[10px] font-medium">Templates</span>
-         </button>
-         <button 
-           onClick={() => setViewMode('categories')}
-           className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${viewMode === 'categories' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}
-         >
-            <FolderIcon />
-            <span className="text-[10px] font-medium">Categories</span>
-         </button>
-      </nav>
+
     </div>
   );
 };
