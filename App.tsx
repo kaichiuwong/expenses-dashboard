@@ -22,6 +22,7 @@ import { CategoryManager } from './components/CategoryManager';
 import { AddCategoryModal } from './components/AddCategoryModal';
 import { LoginPage } from './components/LoginPage';
 import { useTheme } from './hooks/useTheme';
+import { getCookie, setCookie } from './utils/cookies';
 
 // --- Icons ---
 const DollarIcon = () => (
@@ -99,12 +100,23 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
-  // Target Savings State
-  const [targetSavings, setTargetSavings] = useState(2000);
+  // Target Savings State - Initialize from cookie
+  const [targetSavings, setTargetSavings] = useState(() => {
+    const savedTarget = getCookie('targetSavings');
+    return savedTarget ? parseFloat(savedTarget) : 2000;
+  });
   const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [tempTargetInput, setTempTargetInput] = useState("2000");
+  const [tempTargetInput, setTempTargetInput] = useState(() => {
+    const savedTarget = getCookie('targetSavings');
+    return savedTarget || "2000";
+  });
   
   const { theme, toggleTheme } = useTheme();
+
+  // Save targetSavings to cookie whenever it changes
+  useEffect(() => {
+    setCookie('targetSavings', targetSavings.toString());
+  }, [targetSavings]);
 
   const loadData = useCallback(async () => {
     // Only load transaction list data if in monthly view

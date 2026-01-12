@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { checkUserEmail } from '../services/api';
 import { registerLocalPasskey, authenticateLocalPasskey } from '../services/auth';
 import { useTheme } from '../hooks/useTheme';
+import { getCookie, setCookie } from '../utils/cookies';
 
 interface LoginPageProps {
   onLogin: (user: any) => void;
@@ -30,6 +31,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const { theme, toggleTheme } = useTheme();
 
+  // Load email from cookie on mount
+  useEffect(() => {
+    const savedEmail = getCookie('loginEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
@@ -42,6 +51,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       if (response.exists && response.user) {
         setFoundUser(response.user);
         setStep('passkey');
+        // Save email to cookie for next time
+        setCookie('loginEmail', email);
       } else {
         setError(response.message || 'Access denied. User not found.');
       }
