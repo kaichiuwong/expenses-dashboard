@@ -217,17 +217,21 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         
         if (!sourceNode || !targetNode) return null;
         
-        // Calculate link height based on source node's proportion
+        // Calculate link height at SOURCE based on source node's proportion
         const sourceNodeValue = nodeValues.get(link.source) || 0;
-        const linkHeight = sourceNodeValue > 0 ? (link.value / sourceNodeValue) * sourceNode.height : 2;
+        const sourceLinkHeight = sourceNodeValue > 0 ? (link.value / sourceNodeValue) * sourceNode.height : 2;
+        
+        // Calculate link height at TARGET based on target node's proportion
+        const targetNodeValue = nodeValues.get(link.target) || 0;
+        const targetLinkHeight = targetNodeValue > 0 ? (link.value / targetNodeValue) * targetNode.height : 2;
         
         // Get current flow positions
         const sourceY = nodeFlowY.get(link.source) || sourceNode.y;
         const targetY = nodeFlowY.get(link.target) || targetNode.y;
         
-        // Update flow positions for next link - use the same linkHeight for both
-        nodeFlowY.set(link.source, sourceY + linkHeight);
-        nodeFlowY.set(link.target, targetY + linkHeight);
+        // Update flow positions for next link - use respective heights for each side
+        nodeFlowY.set(link.source, sourceY + sourceLinkHeight);
+        nodeFlowY.set(link.target, targetY + targetLinkHeight);
         
         // Calculate positions for the bezier curve
         const x0 = sourceNode.x + sourceNode.width;
@@ -246,11 +250,11 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
           path: `
             M ${x0} ${y0}
             C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}
-            L ${x1} ${y1 + linkHeight}
-            C ${cx} ${y1 + linkHeight}, ${cx} ${y0 + linkHeight}, ${x0} ${y0 + linkHeight}
+            L ${x1} ${y1 + targetLinkHeight}
+            C ${cx} ${y1 + targetLinkHeight}, ${cx} ${y0 + sourceLinkHeight}, ${x0} ${y0 + sourceLinkHeight}
             Z
           `,
-          linkHeight
+          linkHeight: sourceLinkHeight
         };
       }).filter(Boolean);
     
