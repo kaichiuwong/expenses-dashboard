@@ -416,6 +416,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
