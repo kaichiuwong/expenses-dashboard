@@ -91,13 +91,20 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        setSankeyWidth(sankeyContainerRef.current.offsetWidth - 48); // Subtract padding
+        const containerWidth = sankeyContainerRef.current.clientWidth - 24; // Account for padding more conservatively
+        setSankeyWidth(Math.max(containerWidth, 300)); // Minimum width for very small screens
       }
     };
     
+    // Initial measurement with slight delay to ensure container is rendered
+    const timer = setTimeout(updateWidth, 100);
     updateWidth();
+    
     window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateWidth);
+    };
   }, []);
 
   const chartData = useMemo(() => {
