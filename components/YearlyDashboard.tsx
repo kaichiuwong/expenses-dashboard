@@ -34,6 +34,8 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeMonthIndex, setActiveMonthIndex] = useState<number | null>(null);
+  const [sankeyWidth, setSankeyWidth] = useState(900);
+  const sankeyContainerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadYearlyData = async () => {
@@ -84,6 +86,19 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     
     filterMonthTransactions();
   }, [activeMonthIndex, data]);
+
+  // Measure sankey container width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (sankeyContainerRef.current) {
+        setSankeyWidth(sankeyContainerRef.current.offsetWidth - 48); // Subtract padding
+      }
+    };
+    
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -263,15 +278,15 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
           </div>
 
           {/* Income Flow Sankey Diagram - Full Width */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
+          <div ref={sankeyContainerRef} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
               {sankeyChartTitle}
             </h3>
-            <div className="flex-1 w-full flex items-center justify-center overflow-x-auto">
+            <div className="flex-1 w-full flex items-center justify-center">
               <SankeyChart
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}
-                width={Math.max(900, window.innerWidth - 100)}
+                width={sankeyWidth}
                 height={600}
               />
             </div>
