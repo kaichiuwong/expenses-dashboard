@@ -36,6 +36,9 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Fetch all transactions
   useEffect(() => {
@@ -55,6 +58,26 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
     loadAllTransactions();
   }, []);
+
+  // Handle scroll to collapse/expand header
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      const currentScrollY = scrollContainer.scrollTop;
+      
+      // Only collapse if scrolling down and past 50px
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsHeaderCollapsed(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
@@ -178,82 +201,100 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+      <div 
+        className={`bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 sm:px-6 transition-all duration-300 ${
+          isHeaderCollapsed ? 'py-2 cursor-pointer' : 'py-4'
+        }`}
+        onClick={() => isHeaderCollapsed && setIsHeaderCollapsed(false)}
+      >
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Transaction Manager</h1>
-          
-          {/* Search Section */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            {/* Search Bar */}
-            <div className="relative flex-1 w-full sm:max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon />
+          {isHeaderCollapsed ? (
+            // Collapsed Header
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg font-bold text-slate-900 dark:text-white">Transaction Manager</h1>
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                {summaryStats.count.toLocaleString()} transactions
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, category, date, or amount..."
-                className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  <XCircleIcon />
-                </button>
-              )}
             </div>
-          </div>
+          ) : (
+            // Expanded Header
+            <>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Transaction Manager</h1>
+              
+              {/* Search Section */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                {/* Search Bar */}
+                <div className="relative flex-1 w-full sm:max-w-md">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <SearchIcon />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name, category, date, or amount..."
+                    className="w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                      <XCircleIcon />
+                    </button>
+                  )}
+                </div>
+              </div>
 
-          {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
-                Total Transactions
+              {/* Summary Stats */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
+                    Total Transactions
+                  </div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white break-words">
+                    {summaryStats.count.toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
+                    Total Amount
+                  </div>
+                  <div className={`text-xl font-bold break-words ${
+                    summaryStats.total > 0 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : summaryStats.total < 0 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    ${Math.abs(summaryStats.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {summaryStats.total > 0 ? ' DR' : summaryStats.total < 0 ? ' CR' : ''}
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
+                    Average Amount
+                  </div>
+                  <div className={`text-xl font-bold break-words ${
+                    summaryStats.average > 0 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : summaryStats.average < 0 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    ${Math.abs(summaryStats.average).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {summaryStats.average > 0 ? ' DR' : summaryStats.average < 0 ? ' CR' : ''}
+                  </div>
+                </div>
               </div>
-              <div className="text-xl font-bold text-slate-900 dark:text-white break-words">
-                {summaryStats.count.toLocaleString()}
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
-                Total Amount
-              </div>
-              <div className={`text-xl font-bold break-words ${
-                summaryStats.total > 0 
-                  ? 'text-red-600 dark:text-red-400' 
-                  : summaryStats.total < 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-slate-900 dark:text-white'
-              }`}>
-                ${Math.abs(summaryStats.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                {summaryStats.total > 0 ? ' DR' : summaryStats.total < 0 ? ' CR' : ''}
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">
-                Average Amount
-              </div>
-              <div className={`text-xl font-bold break-words ${
-                summaryStats.average > 0 
-                  ? 'text-red-600 dark:text-red-400' 
-                  : summaryStats.average < 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-slate-900 dark:text-white'
-              }`}>
-                ${Math.abs(summaryStats.average).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                {summaryStats.average > 0 ? ' DR' : summaryStats.average < 0 ? ' CR' : ''}
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Transaction Table */}
-      <div className="flex-1 overflow-auto px-6 py-4">
-        <div className="max-w-7xl mx-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 sm:px-6 py-4">
+        <div className="w-full sm:max-w-7xl sm:mx-auto">
           {/* All Transactions Title Bar with Export Button */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">All Transactions</h2>
@@ -262,10 +303,11 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
             <button
               onClick={handleExportCSV}
               disabled={sortedTransactions.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
             >
               <DownloadIcon />
-              Export CSV
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">Export</span>
             </button>
           </div>
           
