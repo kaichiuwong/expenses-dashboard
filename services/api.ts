@@ -305,7 +305,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
   if (!response.ok) throw new Error(await response.text() || response.statusText);
 };
 
-export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string }; message?: string }> => {
+export const checkUserEmail = async (email: string): Promise<{ exists: boolean; user?: { id: string; email: string; two_factor_enabled?: boolean }; message?: string }> => {
   const url = `${BASE_URL}/check-user-email`;
   // Body removed as email is now read from JWT
   const response = await fetch(url, { method: 'POST', headers: await getHeaders(email) });
@@ -388,6 +388,39 @@ export const verifyPasskeyRegistration = async (email: string, credential: any):
   const verifyRes = await fetch(url, { method: 'POST', headers: await getHeaders(email), body: JSON.stringify(payload) });
   if (!verifyRes.ok) throw new Error(await verifyRes.text() || verifyRes.statusText);
   return verifyRes.json();
+};
+
+// --- 2FA API Functions ---
+
+export const enable2FA = async (): Promise<{
+  secret: string;
+  qrCode: string;
+  backupCodes: string[];
+  message: string;
+}> => {
+  const url = `${BASE_URL}/enable-2fa`;
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders() });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  return response.json();
+};
+
+export const verify2FA = async (
+  code: string,
+  enableAfterVerify: boolean
+): Promise<{
+  verified: boolean;
+  twoFactorEnabled: boolean;
+  usedBackupCode: boolean;
+  remainingBackupCodes: number;
+}> => {
+  const url = `${BASE_URL}/verify-2fa`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: await getHeaders(),
+    body: JSON.stringify({ code, enableAfterVerify })
+  });
+  if (!response.ok) throw new Error(await response.text() || response.statusText);
+  return response.json();
 };
 
 // Export base64URLToBuffer for component usage if needed (e.g. converting challenge)
