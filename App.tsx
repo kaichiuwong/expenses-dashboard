@@ -22,6 +22,7 @@ import { CategoryManager } from './components/CategoryManager';
 import { AddCategoryModal } from './components/AddCategoryModal';
 import { LoginPage } from './components/LoginPage';
 import { TwoFactorSetup } from './components/TwoFactorSetup';
+import { TransactionManager } from './components/TransactionManager';
 import { useTheme } from './hooks/useTheme';
 import { getCookie, setCookie } from './utils/cookies';
 
@@ -80,9 +81,12 @@ const LogoutIcon = () => (
 const ShieldIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 );
+const ListIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+);
 
 const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogout }) => {
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories' | '2fa-setup'>('monthly');
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories' | 'transactions' | '2fa-setup'>('monthly');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [month, setMonth] = useState(() => {
     const now = new Date();
@@ -136,6 +140,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       yearly: 'Expensify',
       regular: 'Expensify',
       categories: 'Expensify',
+      transactions: 'Expensify',
       '2fa-setup': 'Expensify'
     };
     document.title = titles[viewMode];
@@ -348,6 +353,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             <FolderIcon />
             Categories
           </button>
+          <button 
+            onClick={() => setViewMode('transactions')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'transactions' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <ListIcon />
+            All Transactions
+          </button>
         </nav>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
@@ -435,6 +447,16 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             <FolderIcon />
             Categories
           </button>
+          <button 
+            onClick={() => {
+              setViewMode('transactions');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'transactions' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+          >
+            <ListIcon />
+            All Transactions
+          </button>
         </nav>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
@@ -511,6 +533,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                 {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Expenses</h2>}
                 {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Template Transactions</h2>}
                 {viewMode === 'categories' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Categories</h2>}
+                {viewMode === 'transactions' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">All Transactions</h2>}
                 {viewMode === '2fa-setup' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Two-Factor Authentication</h2>}
            </div>
 
@@ -680,6 +703,10 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                 onEdit={handleCategoryEdit} 
                 refreshTrigger={categoryRefreshTrigger}
               />
+            )}
+
+            {viewMode === 'transactions' && (
+              <TransactionManager theme={theme} />
             )}
 
             {viewMode === '2fa-setup' && (

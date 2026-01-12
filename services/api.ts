@@ -207,6 +207,13 @@ export const fetchTransactions = async (month: string): Promise<TransactionRespo
   return response.json();
 };
 
+export const fetchAllTransactions = async (): Promise<TransactionResponse> => {
+  const url = `${BASE_URL}/transaction`;
+  const response = await fetch(url, { method: 'POST', headers: await getHeaders() });
+  if (!response.ok) throw new Error(`Error fetching all transactions: ${response.statusText}`);
+  return response.json();
+};
+
 export const fetchCategories = async (): Promise<CategoryResponse> => {
   const url = `${BASE_URL}/category`;
   const response = await fetch(url, { method: 'GET', headers: await getHeaders() });
