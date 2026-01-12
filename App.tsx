@@ -21,6 +21,7 @@ import { AddRegularTransactionModal } from './components/AddRegularTransactionMo
 import { CategoryManager } from './components/CategoryManager';
 import { AddCategoryModal } from './components/AddCategoryModal';
 import { LoginPage } from './components/LoginPage';
+import { TwoFactorSetup } from './components/TwoFactorSetup';
 import { useTheme } from './hooks/useTheme';
 import { getCookie, setCookie } from './utils/cookies';
 
@@ -70,9 +71,12 @@ const CalendarIcon = () => (
 const LogoutIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 );
+const ShieldIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+);
 
 const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogout }) => {
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories'>('monthly');
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly' | 'regular' | 'categories' | '2fa-setup'>('monthly');
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -124,7 +128,8 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       monthly: 'Expensify - Monthly Expenses',
       yearly: 'Expensify - Yearly Expenses',
       regular: 'Expensify - Template Transactions',
-      categories: 'Expensify - Categories'
+      categories: 'Expensify - Categories',
+      '2fa-setup': 'Expensify - Two-Factor Authentication'
     };
     document.title = titles[viewMode];
   }, [viewMode]);
@@ -340,6 +345,13 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
            <button 
+              onClick={() => setViewMode('2fa-setup')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${viewMode === '2fa-setup' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+            >
+              <ShieldIcon />
+              <span>Setup 2FA</span>
+            </button>
+           <button 
               onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
@@ -388,6 +400,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                 {viewMode === 'yearly' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Yearly Expenses</h2>}
                 {viewMode === 'regular' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Template Transactions</h2>}
                 {viewMode === 'categories' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Categories</h2>}
+                {viewMode === '2fa-setup' && <h2 className="text-xl font-bold text-slate-800 dark:text-white mr-4">Two-Factor Authentication</h2>}
            </div>
 
            <div className="flex items-center gap-2 sm:gap-3">
@@ -556,6 +569,17 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                 onEdit={handleCategoryEdit} 
                 refreshTrigger={categoryRefreshTrigger}
               />
+            )}
+
+            {viewMode === '2fa-setup' && (
+              <div className="flex items-center justify-center">
+                <div className="w-full max-w-md">
+                  <TwoFactorSetup 
+                    onComplete={() => setViewMode('monthly')} 
+                    onCancel={() => setViewMode('monthly')} 
+                  />
+                </div>
+              </div>
             )}
 
             {viewMode === 'monthly' && (

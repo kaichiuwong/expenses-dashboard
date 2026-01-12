@@ -4,7 +4,6 @@ import { registerLocalPasskey, authenticateLocalPasskey } from '../services/auth
 import { useTheme } from '../hooks/useTheme';
 import { getCookie, setCookie } from '../utils/cookies';
 import { TwoFactorVerification } from './TwoFactorVerification';
-import { TwoFactorSetup } from './TwoFactorSetup';
 
 interface LoginPageProps {
   onLogin: (user: any) => void;
@@ -25,7 +24,7 @@ const BackIcon = () => (
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'email' | 'passkey' | '2fa-verify' | '2fa-setup'>('email');
+  const [step, setStep] = useState<'email' | 'passkey' | '2fa-verify'>('email');
   const [foundUser, setFoundUser] = useState<any>(null);
   const [requires2FA, setRequires2FA] = useState(false);
   
@@ -119,11 +118,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     onLogin(foundUser);
   };
 
-  const handle2FASetupComplete = () => {
-    // After setup, user should be logged in
-    onLogin(foundUser);
-  };
-
   const handle2FACancel = () => {
     setStep('passkey');
   };
@@ -139,11 +133,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   // Show 2FA verification screen
   if (step === '2fa-verify') {
     return <TwoFactorVerification onVerified={handle2FAVerified} onCancel={handle2FACancel} />;
-  }
-
-  // Show 2FA setup screen
-  if (step === '2fa-setup') {
-    return <TwoFactorSetup onComplete={handle2FASetupComplete} onCancel={handle2FACancel} />;
   }
 
   return (
@@ -260,30 +249,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     >
                         First time? Create Passkey
                     </button>
-
-                    {!requires2FA && (
-                        <button
-                            onClick={() => setStep('2fa-setup')}
-                            disabled={isLoading}
-                            className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-green-200 dark:border-green-800 rounded-md shadow-sm text-sm font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                            Setup 2FA (Optional)
-                        </button>
-                    )}
-
-                    {requires2FA && (
-                        <div className="rounded-md bg-green-50 dark:bg-green-900/30 p-3 border border-green-200 dark:border-green-800">
-                            <p className="text-xs text-green-800 dark:text-green-200 text-center flex items-center justify-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                </svg>
-                                Two-Factor Authentication is enabled
-                            </p>
-                        </div>
-                    )}
 
                     <button
                         onClick={handleReset}
