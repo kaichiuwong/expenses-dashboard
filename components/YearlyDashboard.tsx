@@ -208,12 +208,12 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
               {sankeyChartTitle}
             </h3>
-            <div className="flex-1 min-h-[450px] w-full flex items-center justify-center overflow-x-auto">
+            <div className="flex-1 w-full flex items-center justify-center overflow-x-auto">
               <SankeyChart
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}
                 width={900}
-                height={450}
+                height={600}
               />
             </div>
           </div>

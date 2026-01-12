@@ -26,14 +26,16 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   width = 800, 
   height = 400 
 }) => {
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
   const layout = useMemo(() => {
-    // Limit height to max 900px to prevent overflow
-    const constrainedHeight = Math.min(height, 900);
+    // Don't limit height, use requested height to allow proper display
+    const constrainedHeight = height;
     
     // Calculate node positions and dimensions
     const padding = 50;
     const nodeWidth = 24;
-    const nodeGap = 15;
+    const nodeGap = 8;
     
     // Separate nodes into source (income) and target (categories) columns
     const sourceNodes = nodes.filter(n => !links.some(l => l.target === n.id));
@@ -59,7 +61,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     // Position source nodes (left side)
     const sourcePositions = sourceNodes.map((node, i) => {
       const value = nodeValues.get(node.id) || 0;
-      const nodeHeight = (value / totalValue) * availableHeight * 0.7;
+      const nodeHeight = (value / totalValue) * availableHeight * 0.8;
       return {
         id: node.id,
         label: node.label,
@@ -78,7 +80,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       .sort((a, b) => b.value - a.value);
     
     const totalTargetHeight = sortedTargetNodes.reduce((sum, { value }) => {
-      return sum + Math.max((value / totalValue) * availableHeight * 0.7, 25);
+      return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
     }, 0);
     
     const totalGapHeight = (sortedTargetNodes.length - 1) * nodeGap;
@@ -86,7 +88,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const targetPositions = sortedTargetNodes.map(({ node }) => {
       const value = nodeValues.get(node.id) || 0;
-      const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.7, 25);
+      const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.8, 15);
       const position = {
         id: node.id,
         label: node.label,
@@ -125,7 +127,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         if (!sourceNode || !targetNode) return null;
         
         // Calculate link height based on value
-        const linkHeight = Math.max((link.value / totalValue) * availableHeight * 0.7, 3);
+        const linkHeight = Math.max((link.value / totalValue) * availableHeight * 0.8, 2);
         
         // Get current flow positions
         const sourceY = sourceFlowY.get(link.source) || sourceNode.y;
@@ -163,16 +165,13 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     return {
       nodes: allPositions,
       links: linkPaths,
-      constrainedHeight: Math.min(height, 900),
       fontSize,
       valueTextSize
     };
   }, [nodes, links, width, height]);
 
-  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-
   return (
-    <svg width={width} height={layout.constrainedHeight} className="overflow-visible">
+    <svg width={width} height={height} className="overflow-visible" style={{ display: 'block' }}>
       {/* Draw links first (behind nodes) */}
       {layout.links.map((link, i) => (
         <g key={`link-${i}`}>
@@ -213,6 +212,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             dominantBaseline="middle"
             className="fill-slate-700 dark:fill-slate-300 font-medium"
             fontSize={layout.fontSize}
+            style={{ pointerEvents: 'none' }}
           >
             {node.label}
           </text>
