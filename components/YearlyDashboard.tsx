@@ -106,7 +106,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       clearTimeout(timer);
       window.removeEventListener('resize', updateWidth);
     };
-  }, [sankeyData]); // Re-measure when data changes
+  }, [transactions]); // Re-measure when data changes
 
   const chartData = useMemo(() => {
     if (!data) return [];

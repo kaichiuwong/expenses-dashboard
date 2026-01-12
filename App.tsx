@@ -189,7 +189,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       clearTimeout(timer);
       window.removeEventListener('resize', updateWidth);
     };
-  }, [monthlySankeyData]); // Re-measure when data changes
+  }, [transactions, savings]); // Re-measure when data changes
 
   // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
