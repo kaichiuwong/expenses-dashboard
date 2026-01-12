@@ -170,27 +170,6 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
     loadData();
   }, [loadData]);
 
-  // Measure sankey container width
-  useEffect(() => {
-    const updateWidth = () => {
-      if (sankeyContainerRef.current) {
-        // Get container width and subtract SVG internal padding (50px left + 50px right = 100px)
-        const containerWidth = sankeyContainerRef.current.clientWidth;
-        setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
-      }
-    };
-    
-    // Initial measurement with delay to ensure container is fully rendered
-    const timer = setTimeout(updateWidth, 300);
-    updateWidth();
-    
-    window.addEventListener('resize', updateWidth);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateWidth);
-    };
-  }, [transactions, savings]); // Re-measure when data changes
-
   // Analytics (Only used for Monthly view)
   const { income, expense, savings } = useMemo(() => calculateFinancials(transactions), [transactions]);
   const dateData = useMemo(() => getExpensesByDate(transactions), [transactions]);
@@ -288,6 +267,27 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
 
     return { nodes, links };
   }, [transactions, savings]);
+
+  // Measure sankey container width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (sankeyContainerRef.current) {
+        // Get container width and subtract SVG internal padding (50px left + 50px right = 100px)
+        const containerWidth = sankeyContainerRef.current.clientWidth;
+        setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
+      }
+    };
+    
+    // Initial measurement with delay to ensure container is fully rendered
+    const timer = setTimeout(updateWidth, 300);
+    updateWidth();
+    
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, [transactions, savings]); // Re-measure when data changes
 
   const topCategory = allocationData.find(d => d.name !== 'SAVINGS')?.name || 'N/A';
   const topCategoryAmount = allocationData.find(d => d.name !== 'SAVINGS')?.value || 0;
