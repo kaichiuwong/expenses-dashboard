@@ -91,7 +91,8 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   useEffect(() => {
     const updateWidth = () => {
       if (sankeyContainerRef.current) {
-        setSankeyWidth(sankeyContainerRef.current.offsetWidth - 48); // Subtract padding
+        const containerWidth = sankeyContainerRef.current.offsetWidth - 48; // Subtract padding
+        setSankeyWidth(Math.max(containerWidth, 600)); // Minimum 600px for readability
       }
     };
     
