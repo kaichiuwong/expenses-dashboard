@@ -217,22 +217,17 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         
         if (!sourceNode || !targetNode) return null;
         
-        // Calculate link height based ONLY on source node's proportion
-        // This ensures all outgoing flows fit exactly within the source node
+        // Calculate link height based on source node's proportion
         const sourceNodeValue = nodeValues.get(link.source) || 0;
         const linkHeight = sourceNodeValue > 0 ? (link.value / sourceNodeValue) * sourceNode.height : 2;
         
         // Get current flow positions
         const sourceY = nodeFlowY.get(link.source) || sourceNode.y;
-        
-        // For target, we need to calculate its height proportion separately
-        const targetNodeValue = nodeValues.get(link.target) || 0;
-        const targetHeight = targetNodeValue > 0 ? (link.value / targetNodeValue) * targetNode.height : linkHeight;
         const targetY = nodeFlowY.get(link.target) || targetNode.y;
         
-        // Update flow positions for next link
+        // Update flow positions for next link - use the same linkHeight for both
         nodeFlowY.set(link.source, sourceY + linkHeight);
-        nodeFlowY.set(link.target, targetY + targetHeight);
+        nodeFlowY.set(link.target, targetY + linkHeight);
         
         // Calculate positions for the bezier curve
         const x0 = sourceNode.x + sourceNode.width;
@@ -251,8 +246,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
           path: `
             M ${x0} ${y0}
             C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}
-            L ${x1} ${y1 + targetHeight}
-            C ${cx} ${y1 + targetHeight}, ${cx} ${y0 + linkHeight}, ${x0} ${y0 + linkHeight}
+            L ${x1} ${y1 + linkHeight}
+            C ${cx} ${y1 + linkHeight}, ${cx} ${y0 + linkHeight}, ${x0} ${y0 + linkHeight}
             Z
           `,
           linkHeight
