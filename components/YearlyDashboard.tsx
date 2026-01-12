@@ -271,7 +271,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
               <SankeyChart
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}
-                width={900}
+                width={Math.max(900, window.innerWidth - 100)}
                 height={600}
               />
             </div>

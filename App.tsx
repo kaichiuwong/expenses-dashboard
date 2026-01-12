@@ -911,7 +911,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                         <SankeyChart
                           nodes={monthlySankeyData.nodes}
                           links={monthlySankeyData.links}
-                          width={900}
+                          width={Math.max(900, window.innerWidth - 100)}
                           height={500}
                         />
                       </div>
