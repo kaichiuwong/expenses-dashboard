@@ -76,42 +76,40 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   const sankeyData = useMemo(() => {
     if (!data) return { nodes: [], links: [] };
     
-    let sourceCategories;
+    let expenseCategories;
     let savingsAmount;
     let incomeAmount;
 
     // Determine if we are showing yearly data or specific month data
     if (activeMonthIndex !== null && data.monthly_breakdown[activeMonthIndex]) {
         const monthData = data.monthly_breakdown[activeMonthIndex];
-        sourceCategories = monthData.expenses_by_category;
+        expenseCategories = monthData.expenses_by_category;
         savingsAmount = monthData.total_savings;
         incomeAmount = monthData.total_salary;
     } else {
-        sourceCategories = data.yearly_expenses_by_category;
+        expenseCategories = data.yearly_expenses_by_category;
         savingsAmount = data.yearly_total_savings;
         incomeAmount = data.yearly_total_income;
     }
     
-    // Create nodes: expenses (left), income (middle), savings (right)
+    // Create nodes: income source (left), total income (middle), expenses & savings (right)
     const nodes = [];
     
-    // Add expense category nodes (left side)
-    sourceCategories.forEach((c, index) => {
-      nodes.push({
-        id: c.category_name,
-        label: c.category_name,
-        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
-      });
-    });
-    
-    // Add income node (middle)
+    // Add single income source node (left side)
     nodes.push({
-      id: 'income',
-      label: 'Income',
+      id: 'income-source',
+      label: 'Income Sources',
       color: '#10b981'
     });
     
-    // Add savings node if positive (right side)
+    // Add total income node (middle)
+    nodes.push({
+      id: 'income',
+      label: 'Total Income',
+      color: '#10b981'
+    });
+    
+    // Add savings node if positive (right side - will appear above)
     if (savingsAmount > 0) {
       nodes.push({
         id: 'SAVINGS',
@@ -120,20 +118,27 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       });
     }
     
-    // Create links: categories -> income, income -> savings
-    const links = [];
-    
-    // Links from expense categories to income
-    sourceCategories.forEach((c, index) => {
-      links.push({
-        source: c.category_name,
-        target: 'income',
-        value: c.total,
+    // Add expense category nodes (right side - will appear below)
+    expenseCategories.forEach((c, index) => {
+      nodes.push({
+        id: c.category_name,
+        label: c.category_name,
         color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
       });
     });
     
-    // Link from income to savings if positive
+    // Create links: income source -> total income -> expenses & savings
+    const links = [];
+    
+    // Link from income source to total income
+    links.push({
+      source: 'income-source',
+      target: 'income',
+      value: incomeAmount,
+      color: '#10b981'
+    });
+    
+    // Link from total income to savings if positive
     if (savingsAmount > 0) {
       links.push({
         source: 'income',
@@ -142,6 +147,16 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
         color: '#10b981'
       });
     }
+    
+    // Links from total income to expense categories
+    expenseCategories.forEach((c, index) => {
+      links.push({
+        source: 'income',
+        target: c.category_name,
+        value: c.total,
+        color: categoryColorMap[c.category_name] || COLORS[index % COLORS.length]
+      });
+    });
 
     return { nodes, links };
   }, [data, activeMonthIndex, categoryColorMap]);

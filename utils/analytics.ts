@@ -41,6 +41,25 @@ export const getExpensesByCategory = (transactions: Transaction[]): ChartDataPoi
     .sort((a, b) => b.value - a.value); // Sort descending
 };
 
+export const getIncomesByCategory = (transactions: Transaction[]): ChartDataPoint[] => {
+  const map: Record<string, number> = {};
+  
+  transactions
+    .filter(t => t.amount < 0) // Only include income (negative amounts)
+    .forEach((t) => {
+      const catName = t.category.name;
+      map[catName] = (map[catName] || 0) + Math.abs(t.amount);
+    });
+
+  return Object.entries(map)
+    .map(([name, value], index) => ({
+      name,
+      value,
+      color: COLORS[index % COLORS.length]
+    }))
+    .sort((a, b) => b.value - a.value); // Sort descending
+};
+
 export const getExpensesByDate = (transactions: Transaction[]): DailyDataPoint[] => {
   const map: Record<string, number> = {};
 

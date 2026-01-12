@@ -7,6 +7,7 @@ import { Transaction, RegularTransaction } from './types';
 import { 
   calculateFinancials, 
   getExpensesByCategory, 
+  getIncomesByCategory,
   getExpensesByDate, 
   getExpensesByWeekday 
 } from './utils/analytics';
@@ -189,13 +190,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
   }, [transactions, savings]);
 
   const monthlySankeyData = useMemo(() => {
+    const incomes = getIncomesByCategory(transactions);
     const expenses = getExpensesByCategory(transactions);
     
-    // Create nodes: expenses (left), income (middle), savings (right)
+    // Create nodes: income sources (left), total income (middle), expenses & savings (right)
     const nodes = [];
     
-    // Add expense category nodes (left side - negative)
-    expenses.forEach((cat) => {
+    // Add income source category nodes (left side)
+    incomes.forEach((cat) => {
       nodes.push({
         id: cat.name,
         label: cat.name,
@@ -203,14 +205,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       });
     });
     
-    // Add income node (middle)
+    // Add total income node (middle)
     nodes.push({
       id: 'income',
-      label: 'Income',
+      label: 'Total Income',
       color: '#10b981'
     });
     
-    // Add savings node if positive (right side)
+    // Add savings node if positive (right side - should appear above)
     if (savings > 0) {
       nodes.push({
         id: 'SAVINGS',
@@ -219,11 +221,20 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       });
     }
     
-    // Create links: categories -> income, income -> savings
+    // Add expense category nodes (right side - should appear below)
+    expenses.forEach((cat) => {
+      nodes.push({
+        id: cat.name,
+        label: cat.name,
+        color: cat.color
+      });
+    });
+    
+    // Create links: income sources -> total income -> expenses & savings
     const links = [];
     
-    // Links from expense categories to income
-    expenses.forEach((cat) => {
+    // Links from income sources to total income
+    incomes.forEach((cat) => {
       links.push({
         source: cat.name,
         target: 'income',
@@ -232,7 +243,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       });
     });
     
-    // Link from income to savings if positive
+    // Link from total income to savings if positive
     if (savings > 0) {
       links.push({
         source: 'income',
@@ -241,6 +252,16 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
         color: '#10b981'
       });
     }
+    
+    // Links from total income to expense categories
+    expenses.forEach((cat) => {
+      links.push({
+        source: 'income',
+        target: cat.name,
+        value: cat.value,
+        color: cat.color
+      });
+    });
 
     return { nodes, links };
   }, [transactions, savings]);
