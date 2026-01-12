@@ -293,25 +293,30 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
       </div>
 
       {/* Transaction Table */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 sm:px-6 py-4">
-        <div className="w-full sm:max-w-7xl sm:mx-auto">
-          {/* All Transactions Title Bar with Export Button */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">All Transactions</h2>
-            
-            {/* Export Button */}
-            <button
-              onClick={handleExportCSV}
-              disabled={sortedTransactions.length === 0}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
-            >
-              <DownloadIcon />
-              <span className="hidden sm:inline">Export CSV</span>
-              <span className="sm:hidden">Export</span>
-            </button>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="w-full sm:max-w-7xl sm:mx-auto">
+            {/* All Transactions Title Bar with Export Button */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">All Transactions</h2>
+              
+              {/* Export Button */}
+              <button
+                onClick={handleExportCSV}
+                disabled={sortedTransactions.length === 0}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
+              >
+                <DownloadIcon />
+                <span className="hidden sm:inline">Export CSV</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            </div>
           </div>
-          
-          {sortedTransactions.length === 0 ? (
+        </div>
+
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto px-4 sm:px-6 py-4">
+          <div className="w-full sm:max-w-7xl sm:mx-auto">
+            {sortedTransactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-slate-500 dark:text-slate-400 text-lg">
                 {searchQuery ? 'No transactions match your search' : 'No transactions found'}
