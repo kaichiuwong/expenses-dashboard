@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction } from '../types';
-import { fetchAllTransactions } from '../services/api';
+import { fetchAllTransactions, deleteTransaction } from '../services/api';
+import { AddTransactionModal } from './AddTransactionModal';
 
 interface TransactionManagerProps {
   theme: string;
@@ -34,6 +35,14 @@ const ChevronDownIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 );
 
+const EditIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+);
+
+const TrashIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+);
+
 type SortField = 'date' | 'category' | 'name' | 'amount';
 type SortDirection = 'asc' | 'desc';
 
@@ -47,25 +56,52 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Fetch all transactions
-  useEffect(() => {
-    const loadAllTransactions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchAllTransactions();
-        setTransactions(data.transactions || []);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Failed to fetch transactions');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadAllTransactions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAllTransactions();
+      setTransactions(data.transactions || []);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Failed to fetch transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadAllTransactions();
   }, []);
+
+  // Handle edit transaction
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  // Handle delete transaction
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        await deleteTransaction(id);
+        loadAllTransactions();
+      } catch (err: any) {
+        alert(`Failed to delete: ${err.message}`);
+      }
+    }
+  };
+
+  // Handle transaction saved/updated
+  const handleTransactionSaved = () => {
+    setIsModalOpen(false);
+    setEditingTransaction(null);
+    loadAllTransactions();
+  };
 
   // Handle scroll to collapse/expand header
   useEffect(() => {
@@ -401,6 +437,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                           )}
                         </div>
                       </th>
+                      <th 
+                        scope="col" 
+                        className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
@@ -418,7 +460,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                       const typeLabel = isPositive ? ' DR' : isNegative ? ' CR' : '';
                       
                       return (
-                        <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">
                             {transaction.trx_date}
                           </td>
@@ -433,6 +475,24 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
                           <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${amountColorClass}`}>
                             {displayAmount}{typeLabel}
                           </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleEdit(transaction)}
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+                                title="Edit"
+                              >
+                                <EditIcon />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(transaction.id)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                                title="Delete"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
@@ -444,6 +504,19 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Transaction Modal */}
+      {isModalOpen && (
+        <AddTransactionModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingTransaction(null);
+          }}
+          onSuccess={handleTransactionSaved}
+          transactionToEdit={editingTransaction}
+        />
+      )}
     </div>
   );
 };
