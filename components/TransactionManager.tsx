@@ -226,7 +226,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
 
   return (
     <div className="space-y-6">
-      {/* Collapsible Card */}
+      {/* Transaction Manager Card - Collapsible */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
         {/* Card Header - Collapsible */}
         <div className="border-b border-slate-200 dark:border-slate-700">
@@ -326,132 +326,135 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({ theme })
             </div>
           )}
         </div>
+      </div>
 
-        {/* Transaction Table - Only shown when not collapsed */}
-        {!isCollapsed && (
-          <div className="overflow-x-auto">
-            {sortedTransactions.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-slate-500 dark:text-slate-400 text-lg">
-                  {searchQuery ? 'No transactions match your search' : 'No transactions found'}
-                </p>
-              </div>
-            ) : (
-              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead className="bg-slate-50 dark:bg-slate-700/50">
-                  <tr>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      onClick={() => handleSort('date')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Date
-                        {sortField === 'date' && (
-                          sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      onClick={() => handleSort('category')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Category
-                        {sortField === 'category' && (
-                          sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      onClick={() => handleSort('name')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Name
-                        {sortField === 'name' && (
-                          sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
-                      onClick={() => handleSort('amount')}
-                    >
-                      <div className="flex items-center justify-end gap-1">
-                        Amount
-                        {sortField === 'amount' && (
-                          sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                  {sortedTransactions.map((transaction) => {
-                    const isPositive = transaction.amount > 0;
-                    const isNegative = transaction.amount < 0;
-                    const absAmount = Math.abs(transaction.amount);
-                    const amountColorClass = isPositive 
-                      ? 'text-red-600 dark:text-red-400' 
-                      : isNegative
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-slate-800 dark:text-slate-100';
-                    
-                    const displayAmount = `$${absAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                    const typeLabel = isPositive ? ' DR' : isNegative ? ' CR' : '';
-                    
-                    return (
-                      <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">
-                          {transaction.trx_date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-                            {transaction.category.name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
-                          {transaction.name}
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${amountColorClass}`}>
-                          {displayAmount}{typeLabel}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button 
-                              onClick={() => handleEdit(transaction)}
-                              className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
-                              title="Edit"
-                            >
-                              <EditIcon />
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(transaction.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
-                              title="Delete"
-                            >
-                              <TrashIcon />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
+      {/* All Transactions Table Card - Separate Card */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">All Transactions</h3>
+        </div>
+        <div className="overflow-x-auto">
+          {sortedTransactions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-500 dark:text-slate-400 text-lg">
+                {searchQuery ? 'No transactions match your search' : 'No transactions found'}
+              </p>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-700/50">
+                <tr>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Date
+                      {sortField === 'date' && (
+                        sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                    onClick={() => handleSort('category')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Category
+                      {sortField === 'category' && (
+                        sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Name
+                      {sortField === 'name' && (
+                        sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Amount
+                      {sortField === 'amount' && (
+                        sortDirection === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                {sortedTransactions.map((transaction) => {
+                  const isPositive = transaction.amount > 0;
+                  const isNegative = transaction.amount < 0;
+                  const absAmount = Math.abs(transaction.amount);
+                  const amountColorClass = isPositive 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : isNegative
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-slate-800 dark:text-slate-100';
+                  
+                  const displayAmount = `$${absAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const typeLabel = isPositive ? ' DR' : isNegative ? ' CR' : '';
+                  
+                  return (
+                    <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">
+                        {transaction.trx_date}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                          {transaction.category.name}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 font-medium">
+                        {transaction.name}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${amountColorClass}`}>
+                        {displayAmount}{typeLabel}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleEdit(transaction)}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+                            title="Edit"
+                          >
+                            <EditIcon />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(transaction.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Transaction Modal */}
