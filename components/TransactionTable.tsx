@@ -16,10 +16,12 @@ const TrashIcon = () => (
 );
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, onEdit, onDelete }) => {
-  // Sort by date asc
-  const sorted = [...transactions].sort((a, b) => 
-    new Date(a.trx_date).getTime() - new Date(b.trx_date).getTime()
-  );
+  // Sort by trx_date desc, then by created_at (input date) desc
+  const sorted = [...transactions].sort((a, b) => {
+    const dateCompare = new Date(b.trx_date).getTime() - new Date(a.trx_date).getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   return (
     <div className="overflow-x-auto">
