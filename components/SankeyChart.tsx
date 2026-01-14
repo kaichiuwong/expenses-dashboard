@@ -143,6 +143,39 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       type: 'total' as const
     }] : [];
     
+    // Column 4: Individual expense categories - sorted by value
+    // Calculate this BEFORE column 3 to ensure heights match
+    const sortedExpenseNodes = expenseNodes
+      .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
+      .sort((a, b) => b.value - a.value);
+    
+    const expenseNodeHeights = sortedExpenseNodes.map(({ node, value }) => ({
+      node,
+      value,
+      height: Math.max((value / totalValue) * availableHeight * 0.8, 15)
+    }));
+    
+    const totalExpenseCategoriesHeight = expenseNodeHeights.reduce((sum, { height }) => sum + height, 0);
+    
+    const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
+    let currentCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
+    
+    const col4Positions = expenseNodeHeights.map(({ node, value, height }) => {
+      const position = {
+        id: node.id,
+        label: node.label,
+        color: node.color,
+        x: width - horizontalPadding - nodeWidth,
+        y: currentCol4Y,
+        width: nodeWidth,
+        height: height,
+        value,
+        type: 'expense' as const
+      };
+      currentCol4Y += height + nodeGap;
+      return position;
+    });
+    
     // Column 3: Savings and Total Expenses nodes
     const col3Positions: any[] = [];
     
@@ -150,11 +183,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const savingsValue = savingsNodes.reduce((sum, node) => sum + (nodeValues.get(node.id) || 0), 0);
     const savingsHeight = savingsValue > 0 ? Math.max((savingsValue / totalValue) * availableHeight * 0.8, 15) : 0;
     
-    // Calculate Total Expenses height - must match sum of all expense category heights
-    const totalExpensesHeight = expenseNodes.reduce((sum, node) => {
-      const value = nodeValues.get(node.id) || 0;
-      return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
-    }, 0);
+    // Use the EXACT sum of expense category heights for Total Expenses
+    const totalExpensesHeight = totalExpenseCategoriesHeight;
     
     const col3Gap = savingsHeight > 0 && totalExpensesHeight > 0 ? nodeGap * 3 : 0;
     const col3TotalHeight = savingsHeight + col3Gap + totalExpensesHeight;
@@ -190,36 +220,6 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         type: 'total-expenses' as const
       });
     }
-    
-    // Column 4: Individual expense categories - sorted by value
-    const sortedExpenseNodes = expenseNodes
-      .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
-      .sort((a, b) => b.value - a.value);
-    
-    const totalExpenseCategoriesHeight = sortedExpenseNodes.reduce((sum, { value }) => {
-      return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
-    }, 0);
-    
-    const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
-    let currentCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
-    
-    const col4Positions = sortedExpenseNodes.map(({ node }) => {
-      const value = nodeValues.get(node.id) || 0;
-      const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.8, 15);
-      const position = {
-        id: node.id,
-        label: node.label,
-        color: node.color,
-        x: width - horizontalPadding - nodeWidth,
-        y: currentCol4Y,
-        width: nodeWidth,
-        height: nodeHeight,
-        value,
-        type: 'expense' as const
-      };
-      currentCol4Y += nodeHeight + nodeGap;
-      return position;
-    });
     
     const allPositions = [...col1Positions, ...col2Position, ...col3Positions, ...col4Positions];
     
