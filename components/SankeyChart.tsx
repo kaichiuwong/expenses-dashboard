@@ -149,7 +149,12 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     // Calculate heights for column 3
     const savingsValue = savingsNodes.reduce((sum, node) => sum + (nodeValues.get(node.id) || 0), 0);
     const savingsHeight = savingsValue > 0 ? Math.max((savingsValue / totalValue) * availableHeight * 0.8, 15) : 0;
-    const totalExpensesHeight = totalExpensesValue > 0 ? Math.max((totalExpensesValue / totalValue) * availableHeight * 0.8, 15) : 0;
+    
+    // Calculate Total Expenses height - must match sum of all expense category heights
+    const totalExpensesHeight = expenseNodes.reduce((sum, node) => {
+      const value = nodeValues.get(node.id) || 0;
+      return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
+    }, 0);
     
     const col3Gap = savingsHeight > 0 && totalExpensesHeight > 0 ? nodeGap * 3 : 0;
     const col3TotalHeight = savingsHeight + col3Gap + totalExpensesHeight;
