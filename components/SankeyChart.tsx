@@ -64,21 +64,21 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       nodeValues.set('income', incomeValue);
     }
     
-    // Separate nodes into three columns: income sources (left), total income (middle), expenses & savings (right)
+    // Four column layout: income sources (col 1) -> total income (col 2) -> savings & total expenses (col 3) -> expense categories (col 4)
     const incomeNode = nodes.find(n => n.id === 'income');
     const categoryNodes = nodes.filter(n => n.id !== 'income');
     
-    // Income source categories: those that send to income (category -> income)
+    // Column 1: Income source categories (those that send to income)
     const incomeSourceCategories = categoryNodes.filter(n => 
       links.some(l => l.source === n.id && l.target === 'income')
     );
     
-    // Right side nodes: those that receive from income (income -> category)
+    // Column 3 & 4 nodes: those that receive from income (income -> category)
     const rightNodes = categoryNodes.filter(n => 
       links.some(l => l.source === 'income' && l.target === n.id)
     );
     
-    // Separate right nodes into savings (above) and expenses (below)
+    // Separate into savings and expenses
     const savingsNodes = rightNodes.filter(n => n.id === 'SAVINGS');
     const expenseNodes = rightNodes.filter(n => n.id !== 'SAVINGS');
     
@@ -89,12 +89,17 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       .filter(l => l.target === 'income')
       .reduce((sum, link) => sum + link.value, 0);
     
-    const maxCategoryCount = Math.max(incomeSourceCategories.length, rightNodes.length);
+    // Calculate total expenses value
+    const totalExpensesValue = expenseNodes.reduce((sum, node) => {
+      return sum + (nodeValues.get(node.id) || 0);
+    }, 0);
+    
+    const maxCategoryCount = Math.max(incomeSourceCategories.length, expenseNodes.length);
     const averageNodeSpace = maxCategoryCount > 0 ? availableHeight / maxCategoryCount : availableHeight;
     const fontSize = averageNodeSpace < 40 ? 10 : averageNodeSpace < 60 ? 12 : 14;
     const valueTextSize = averageNodeSpace < 40 ? 8 : averageNodeSpace < 60 ? 10 : 12;
     
-    // Position left nodes (income source categories) - sorted by value
+    // Column 1: Position income source categories - sorted by value
     const sortedIncomeSourceNodes = incomeSourceCategories
       .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
       .sort((a, b) => b.value - a.value);
@@ -106,7 +111,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const incomeSourceGapHeight = (sortedIncomeSourceNodes.length - 1) * nodeGap;
     let currentIncomeSourceY = verticalPadding + (availableHeight - totalIncomeSourceHeight - incomeSourceGapHeight) / 2;
     
-    const leftPositions = sortedIncomeSourceNodes.map(({ node }) => {
+    const col1Positions = sortedIncomeSourceNodes.map(({ node }) => {
       const value = nodeValues.get(node.id) || 0;
       const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.8, 15);
       const position = {
@@ -124,13 +129,13 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       return position;
     });
     
-    // Position middle node (income) - value already calculated above
+    // Column 2: Total Income node
     const incomeHeight = (incomeValue / totalValue) * availableHeight * 0.8;
-    const middlePosition = incomeNode ? [{
+    const col2Position = incomeNode ? [{
       id: incomeNode.id,
       label: incomeNode.label,
       color: incomeNode.color,
-      x: width / 2 - nodeWidth / 2,
+      x: horizontalPadding + (width - horizontalPadding * 2) * 0.33 - nodeWidth / 2,
       y: verticalPadding + (availableHeight - incomeHeight) / 2,
       width: nodeWidth,
       height: incomeHeight,
@@ -138,32 +143,62 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       type: 'total' as const
     }] : [];
     
-    // Position right nodes - savings above, expenses below
-    const sortedSavingsNodes = savingsNodes
-      .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
-      .sort((a, b) => b.value - a.value);
+    // Column 3: Savings and Total Expenses nodes
+    const col3Positions: any[] = [];
     
+    // Calculate heights for column 3
+    const savingsValue = savingsNodes.reduce((sum, node) => sum + (nodeValues.get(node.id) || 0), 0);
+    const savingsHeight = savingsValue > 0 ? Math.max((savingsValue / totalValue) * availableHeight * 0.8, 15) : 0;
+    const totalExpensesHeight = totalExpensesValue > 0 ? Math.max((totalExpensesValue / totalValue) * availableHeight * 0.8, 15) : 0;
+    
+    const col3Gap = savingsHeight > 0 && totalExpensesHeight > 0 ? nodeGap * 3 : 0;
+    const col3TotalHeight = savingsHeight + col3Gap + totalExpensesHeight;
+    let currentCol3Y = verticalPadding + (availableHeight - col3TotalHeight) / 2;
+    
+    // Add Savings node if it exists
+    if (savingsValue > 0) {
+      col3Positions.push({
+        id: 'SAVINGS',
+        label: 'SAVINGS',
+        color: savingsNodes[0]?.color || '#10b981',
+        x: horizontalPadding + (width - horizontalPadding * 2) * 0.66 - nodeWidth / 2,
+        y: currentCol3Y,
+        width: nodeWidth,
+        height: savingsHeight,
+        value: savingsValue,
+        type: 'savings' as const
+      });
+      currentCol3Y += savingsHeight + col3Gap;
+    }
+    
+    // Add Total Expenses node if there are expenses
+    if (totalExpensesValue > 0) {
+      col3Positions.push({
+        id: 'total-expenses',
+        label: 'Total Expenses',
+        color: '#ef4444',
+        x: horizontalPadding + (width - horizontalPadding * 2) * 0.66 - nodeWidth / 2,
+        y: currentCol3Y,
+        width: nodeWidth,
+        height: totalExpensesHeight,
+        value: totalExpensesValue,
+        type: 'total-expenses' as const
+      });
+    }
+    
+    // Column 4: Individual expense categories - sorted by value
     const sortedExpenseNodes = expenseNodes
       .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
       .sort((a, b) => b.value - a.value);
     
-    const totalSavingsHeight = sortedSavingsNodes.reduce((sum, { value }) => {
+    const totalExpenseCategoriesHeight = sortedExpenseNodes.reduce((sum, { value }) => {
       return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
     }, 0);
     
-    const totalExpenseHeight = sortedExpenseNodes.reduce((sum, { value }) => {
-      return sum + Math.max((value / totalValue) * availableHeight * 0.8, 15);
-    }, 0);
-    
-    const savingsGapHeight = Math.max(sortedSavingsNodes.length - 1, 0) * nodeGap;
     const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
-    const middleGap = (sortedSavingsNodes.length > 0 && sortedExpenseNodes.length > 0) ? nodeGap * 3 : 0;
+    let currentCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
     
-    const totalRightHeight = totalSavingsHeight + savingsGapHeight + middleGap + totalExpenseHeight + expenseGapHeight;
-    let currentRightY = verticalPadding + (availableHeight - totalRightHeight) / 2;
-    
-    // Position savings nodes first (top)
-    const rightSavingsPositions = sortedSavingsNodes.map(({ node }) => {
+    const col4Positions = sortedExpenseNodes.map(({ node }) => {
       const value = nodeValues.get(node.id) || 0;
       const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.8, 15);
       const position = {
@@ -171,41 +206,64 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         label: node.label,
         color: node.color,
         x: width - horizontalPadding - nodeWidth,
-        y: currentRightY,
-        width: nodeWidth,
-        height: nodeHeight,
-        value,
-        type: 'savings' as const
-      };
-      currentRightY += nodeHeight + nodeGap;
-      return position;
-    });
-    
-    // Add middle gap between savings and expenses
-    currentRightY += middleGap - nodeGap;
-    
-    // Position expense nodes (bottom)
-    const rightExpensePositions = sortedExpenseNodes.map(({ node }) => {
-      const value = nodeValues.get(node.id) || 0;
-      const nodeHeight = Math.max((value / totalValue) * availableHeight * 0.8, 15);
-      const position = {
-        id: node.id,
-        label: node.label,
-        color: node.color,
-        x: width - horizontalPadding - nodeWidth,
-        y: currentRightY,
+        y: currentCol4Y,
         width: nodeWidth,
         height: nodeHeight,
         value,
         type: 'expense' as const
       };
-      currentRightY += nodeHeight + nodeGap;
+      currentCol4Y += nodeHeight + nodeGap;
       return position;
     });
     
-    const rightPositions = [...rightSavingsPositions, ...rightExpensePositions];
+    const allPositions = [...col1Positions, ...col2Position, ...col3Positions, ...col4Positions];
     
-    const allPositions = [...leftPositions, ...middlePosition, ...rightPositions];
+    // Create modified links for 4-column layout:
+    // 1. Keep income source -> total income links as-is
+    // 2. Create total income -> savings link
+    // 3. Create total income -> total expenses link
+    // 4. Create total expenses -> individual expense category links
+    const modifiedLinks: typeof links = [];
+    
+    // Column 1 to Column 2: Income sources -> Total Income (unchanged)
+    links.forEach(link => {
+      if (link.target === 'income') {
+        modifiedLinks.push(link);
+      }
+    });
+    
+    // Column 2 to Column 3: Total Income -> Savings
+    if (savingsValue > 0) {
+      modifiedLinks.push({
+        source: 'income',
+        target: 'SAVINGS',
+        value: savingsValue,
+        color: savingsNodes[0]?.color || '#10b981'
+      });
+    }
+    
+    // Column 2 to Column 3: Total Income -> Total Expenses
+    if (totalExpensesValue > 0) {
+      modifiedLinks.push({
+        source: 'income',
+        target: 'total-expenses',
+        value: totalExpensesValue,
+        color: '#ef4444'
+      });
+    }
+    
+    // Column 3 to Column 4: Total Expenses -> Individual expense categories
+    expenseNodes.forEach(node => {
+      const value = nodeValues.get(node.id) || 0;
+      if (value > 0) {
+        modifiedLinks.push({
+          source: 'total-expenses',
+          target: node.id,
+          value: value,
+          color: node.color
+        });
+      }
+    });
     
     // Track vertical position for each node's flows - separate for outgoing and incoming
     const nodeOutgoingY = new Map<string, number>();
@@ -216,8 +274,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     });
     
     // Group links by source to process them together
-    const linksBySource = new Map<string, typeof links>();
-    links.forEach(link => {
+    const linksBySource = new Map<string, typeof modifiedLinks>();
+    modifiedLinks.forEach(link => {
       if (!linksBySource.has(link.source)) {
         linksBySource.set(link.source, []);
       }
@@ -234,7 +292,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     });
     
     // Flatten back to single array
-    const sortedLinks: typeof links = [];
+    const sortedLinks: typeof modifiedLinks = [];
     linksBySource.forEach(sourceLinks => {
       sortedLinks.push(...sourceLinks);
     });
@@ -360,23 +418,52 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             <title>{`${node.label}: $${node.value.toFixed(2)}`}</title>
           </rect>
           <text
-            x={node.x < width / 3 ? node.x + node.width + 10 : node.x > width * 2/3 ? node.x - 10 : node.x + node.width / 2}
-            y={node.x >= width / 3 && node.x <= width * 2/3 ? node.y - 10 : node.y + node.height / 2}
-            textAnchor={node.x < width / 3 ? 'start' : node.x > width * 2/3 ? 'end' : 'middle'}
-            dominantBaseline={node.x >= width / 3 && node.x <= width * 2/3 ? 'auto' : 'middle'}
+            x={
+              node.x < width * 0.25 ? node.x + node.width + 10 : // Column 1 - right side
+              node.x > width * 0.75 ? node.x - 10 :              // Column 4 - left side
+              node.x + node.width / 2                             // Columns 2 & 3 - center
+            }
+            y={
+              node.x >= width * 0.25 && node.x <= width * 0.75 ? 
+                node.y - 10 :                                     // Columns 2 & 3 - above
+                node.y + node.height / 2                          // Columns 1 & 4 - middle
+            }
+            textAnchor={
+              node.x < width * 0.25 ? 'start' :                   // Column 1 - start
+              node.x > width * 0.75 ? 'end' :                     // Column 4 - end
+              'middle'                                             // Columns 2 & 3 - middle
+            }
+            dominantBaseline={
+              node.x >= width * 0.25 && node.x <= width * 0.75 ? 
+                'auto' :                                           // Columns 2 & 3
+                'middle'                                           // Columns 1 & 4
+            }
             className="fill-slate-700 dark:fill-slate-300 font-medium"
             fontSize={layout.fontSize}
             style={{ pointerEvents: 'none' }}
           >
             {node.type === 'income' ? `Income: ${node.label}` : 
              node.type === 'expense' ? `Expense: ${node.label}` : 
+             node.type === 'total-expenses' ? 'Total Expenses' :
              node.label} ({((node.value / layout.totalIncome) * 100).toFixed(2)}%)
           </text>
           {hoveredNodeId === node.id && (
             <text
-              x={node.x < width / 3 ? node.x + node.width + 10 : node.x > width * 2/3 ? node.x - 10 : node.x + node.width / 2}
-              y={node.x >= width / 3 && node.x <= width * 2/3 ? node.y + node.height + layout.fontSize + 8 : node.y + node.height / 2 + (layout.fontSize + 4)}
-              textAnchor={node.x < width / 3 ? 'start' : node.x > width * 2/3 ? 'end' : 'middle'}
+              x={
+                node.x < width * 0.25 ? node.x + node.width + 10 :
+                node.x > width * 0.75 ? node.x - 10 :
+                node.x + node.width / 2
+              }
+              y={
+                node.x >= width * 0.25 && node.x <= width * 0.75 ? 
+                  node.y + node.height + layout.fontSize + 8 :
+                  node.y + node.height / 2 + (layout.fontSize + 4)
+              }
+              textAnchor={
+                node.x < width * 0.25 ? 'start' :
+                node.x > width * 0.75 ? 'end' :
+                'middle'
+              }
               dominantBaseline="middle"
               className="fill-slate-500 dark:fill-slate-400"
               fontSize={layout.valueTextSize}
