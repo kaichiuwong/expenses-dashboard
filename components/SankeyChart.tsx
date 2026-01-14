@@ -140,7 +140,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       y: verticalPadding,
       width: nodeWidth,
       height: incomeHeight,
-      value: incomeValue,
+      value: actualIncome, // Use actual income for display, not the max
       type: 'total' as const
     }] : [];
     
