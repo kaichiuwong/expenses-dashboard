@@ -109,7 +109,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     }, 0);
     
     const incomeSourceGapHeight = (sortedIncomeSourceNodes.length - 1) * nodeGap;
-    let currentIncomeSourceY = verticalPadding + (availableHeight - totalIncomeSourceHeight - incomeSourceGapHeight) / 2;
+    let currentIncomeSourceY = verticalPadding;
     
     const col1Positions = sortedIncomeSourceNodes.map(({ node }) => {
       const value = nodeValues.get(node.id) || 0;
@@ -136,7 +136,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       label: incomeNode.label,
       color: incomeNode.color,
       x: horizontalPadding + (width - horizontalPadding * 2) * 0.33 - nodeWidth / 2,
-      y: verticalPadding + (availableHeight - incomeHeight) / 2,
+      y: verticalPadding,
       width: nodeWidth,
       height: incomeHeight,
       value: incomeValue,
@@ -158,7 +158,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const col3Gap = savingsHeight > 0 && totalExpensesHeight > 0 ? nodeGap * 3 : 0;
     const col3TotalHeight = savingsHeight + col3Gap + totalExpensesHeight;
-    let currentCol3Y = verticalPadding + (availableHeight - col3TotalHeight) / 2;
+    let currentCol3Y = verticalPadding;
     
     // Add Savings node if it exists
     if (savingsValue > 0) {
@@ -210,7 +210,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
     // Constrain column 4 starting Y to not be higher than Total Expenses Y
-    const centeredCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
+    const centeredCol4Y = verticalPadding;
     let currentCol4Y = Math.max(centeredCol4Y, totalExpensesY);
     
     const col4Positions = expenseNodeHeights.map(({ node, value, height }) => {
