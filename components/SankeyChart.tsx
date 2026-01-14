@@ -35,7 +35,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     
     // Calculate node positions and dimensions - minimal padding for mobile
     const horizontalPadding = width < 500 ? 8 : width < 700 ? 20 : 40;
-    const verticalPadding = width < 500 ? 12 : width < 700 ? 20 : 30;
+    const verticalPadding = width < 500 ? 4 : width < 700 ? 8 : 15;
     const nodeWidth = 24;
     const nodeGap = 8;
     

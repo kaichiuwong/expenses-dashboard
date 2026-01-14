@@ -35,6 +35,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   const [error, setError] = useState<string | null>(null);
   const [activeMonthIndex, setActiveMonthIndex] = useState<number | null>(null);
   const [sankeyWidth, setSankeyWidth] = useState(900);
+  const [sankeyHeight, setSankeyHeight] = useState(400);
   const sankeyContainerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,24 +88,26 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     filterMonthTransactions();
   }, [activeMonthIndex, data]);
 
-  // Measure sankey container width
+  // Measure sankey container width and height
   useEffect(() => {
-    const updateWidth = () => {
+    const updateDimensions = () => {
       if (sankeyContainerRef.current) {
-        // Get container width and subtract SVG internal padding (50px left + 50px right = 100px)
+        // Get container dimensions
         const containerWidth = sankeyContainerRef.current.clientWidth;
+        const containerHeight = sankeyContainerRef.current.clientHeight;
         setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
+        setSankeyHeight(Math.max(containerHeight - 20, 300)); // Use available height, minimum 300px
       }
     };
     
     // Initial measurement with delay to ensure container is fully rendered
-    const timer = setTimeout(updateWidth, 300);
-    updateWidth();
+    const timer = setTimeout(updateDimensions, 300);
+    updateDimensions();
     
-    window.addEventListener('resize', updateWidth);
+    window.addEventListener('resize', updateDimensions);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('resize', updateWidth);
+      window.removeEventListener('resize', updateDimensions);
     };
   }, [transactions]); // Re-measure when data changes
 
@@ -295,7 +298,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}
                 width={sankeyWidth}
-                height={600}
+                height={sankeyHeight}
               />
             </div>
           </div>
