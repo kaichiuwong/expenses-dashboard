@@ -59,7 +59,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const incomeOutgoing = links
       .filter(l => l.source === 'income')
       .reduce((sum, link) => sum + link.value, 0);
+    // Use max for node height, but always use incoming for percentage calculations
     const incomeValue = Math.max(incomeIncoming, incomeOutgoing);
+    const actualIncome = incomeIncoming; // Always use actual incoming for percentages
     if (incomeValue > 0) {
       nodeValues.set('income', incomeValue);
     }
@@ -85,9 +87,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     // Calculate available height and total value
     const availableHeight = constrainedHeight - verticalPadding * 2;
     const totalValue = links.reduce((sum, link) => sum + link.value, 0);
-    const totalIncome = links
-      .filter(l => l.target === 'income')
-      .reduce((sum, link) => sum + link.value, 0);
+    // Use actual incoming income for percentage calculations
+    const totalIncome = actualIncome;
     
     // Calculate total expenses value
     const totalExpensesValue = expenseNodes.reduce((sum, node) => {
