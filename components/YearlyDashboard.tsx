@@ -286,11 +286,11 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
           </div>
 
           {/* Income Flow Sankey Diagram - Full Width */}
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 truncate" title={sankeyChartTitle}>
+          <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 md:mb-4 truncate" title={sankeyChartTitle}>
               {sankeyChartTitle}
             </h3>
-            <div ref={sankeyContainerRef} className="flex-1 w-full flex items-center justify-center">
+            <div ref={sankeyContainerRef} className="flex-1 w-full flex justify-center">
               <SankeyChart
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}

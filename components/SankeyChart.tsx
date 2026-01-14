@@ -34,7 +34,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const constrainedHeight = height;
     
     // Calculate node positions and dimensions - minimal padding for mobile
-    const padding = width < 500 ? 8 : width < 700 ? 20 : 40;
+    const horizontalPadding = width < 500 ? 8 : width < 700 ? 20 : 40;
+    const verticalPadding = width < 500 ? 12 : width < 700 ? 20 : 30;
     const nodeWidth = 24;
     const nodeGap = 8;
     
@@ -82,7 +83,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const expenseNodes = rightNodes.filter(n => n.id !== 'SAVINGS');
     
     // Calculate available height and total value
-    const availableHeight = constrainedHeight - padding * 2;
+    const availableHeight = constrainedHeight - verticalPadding * 2;
     const totalValue = links.reduce((sum, link) => sum + link.value, 0);
     const totalIncome = links
       .filter(l => l.target === 'income')
@@ -103,7 +104,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     }, 0);
     
     const incomeSourceGapHeight = (sortedIncomeSourceNodes.length - 1) * nodeGap;
-    let currentIncomeSourceY = padding + (availableHeight - totalIncomeSourceHeight - incomeSourceGapHeight) / 2;
+    let currentIncomeSourceY = verticalPadding + (availableHeight - totalIncomeSourceHeight - incomeSourceGapHeight) / 2;
     
     const leftPositions = sortedIncomeSourceNodes.map(({ node }) => {
       const value = nodeValues.get(node.id) || 0;
@@ -112,7 +113,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         id: node.id,
         label: node.label,
         color: node.color,
-        x: padding,
+        x: horizontalPadding,
         y: currentIncomeSourceY,
         width: nodeWidth,
         height: nodeHeight,
@@ -129,7 +130,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       label: incomeNode.label,
       color: incomeNode.color,
       x: width / 2 - nodeWidth / 2,
-      y: padding + (availableHeight - incomeHeight) / 2,
+      y: verticalPadding + (availableHeight - incomeHeight) / 2,
       width: nodeWidth,
       height: incomeHeight,
       value: incomeValue
@@ -157,7 +158,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const middleGap = (sortedSavingsNodes.length > 0 && sortedExpenseNodes.length > 0) ? nodeGap * 3 : 0;
     
     const totalRightHeight = totalSavingsHeight + savingsGapHeight + middleGap + totalExpenseHeight + expenseGapHeight;
-    let currentRightY = padding + (availableHeight - totalRightHeight) / 2;
+    let currentRightY = verticalPadding + (availableHeight - totalRightHeight) / 2;
     
     // Position savings nodes first (top)
     const rightSavingsPositions = sortedSavingsNodes.map(({ node }) => {
@@ -167,7 +168,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         id: node.id,
         label: node.label,
         color: node.color,
-        x: width - padding - nodeWidth,
+        x: width - horizontalPadding - nodeWidth,
         y: currentRightY,
         width: nodeWidth,
         height: nodeHeight,
@@ -188,7 +189,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         id: node.id,
         label: node.label,
         color: node.color,
-        x: width - padding - nodeWidth,
+        x: width - horizontalPadding - nodeWidth,
         y: currentRightY,
         width: nodeWidth,
         height: nodeHeight,
