@@ -439,36 +439,63 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
           >
             <title>{`${node.label}: $${node.value.toFixed(2)}`}</title>
           </rect>
-          <text
-            x={
-              node.x < width * 0.25 ? node.x + node.width + 10 : // Column 1 - right side
-              node.x > width * 0.75 ? node.x - 10 :              // Column 4 - left side
-              node.x + node.width / 2                             // Columns 2 & 3 - center
+          {(() => {
+            const labelText = node.type === 'total-expenses' ? 'Total Expenses' : node.label;
+            const percentage = `(${((node.value / layout.totalIncome) * 100).toFixed(2)}%)`;
+            const fullText = `${labelText} ${percentage}`;
+            const isMobile = width < 500;
+            const isColumn1 = node.x < width * 0.25;
+            const isColumn4 = node.x > width * 0.75;
+            const isColumn2or3 = node.x >= width * 0.25 && node.x <= width * 0.75;
+            const minHeightForVertical = 60; // Minimum height to show vertical text
+            const showVertical = isMobile && node.height >= minHeightForVertical;
+            
+            if (showVertical) {
+              // Vertical text inside node for mobile
+              return (
+                <text
+                  x={node.x + node.width / 2}
+                  y={node.y + node.height / 2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="fill-white font-medium"
+                  fontSize={layout.fontSize}
+                  style={{ pointerEvents: 'none' }}
+                  writingMode="vertical-rl"
+                  transform={`rotate(180, ${node.x + node.width / 2}, ${node.y + node.height / 2})`}
+                >
+                  {fullText}
+                </text>
+              );
+            } else {
+              // Horizontal text outside node for desktop or short mobile nodes
+              return (
+                <text
+                  x={
+                    isColumn1 ? node.x + node.width + 10 :
+                    isColumn4 ? node.x - 10 :
+                    node.x + node.width / 2
+                  }
+                  y={
+                    isColumn2or3 ? node.y - 10 : node.y + node.height / 2
+                  }
+                  textAnchor={
+                    isColumn1 ? 'start' :
+                    isColumn4 ? 'end' :
+                    'middle'
+                  }
+                  dominantBaseline={
+                    isColumn2or3 ? 'auto' : 'middle'
+                  }
+                  className="fill-slate-700 dark:fill-slate-300 font-medium"
+                  fontSize={layout.fontSize}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {fullText}
+                </text>
+              );
             }
-            y={
-              node.x >= width * 0.25 && node.x <= width * 0.75 ? 
-                node.y - 10 :                                     // Columns 2 & 3 - above
-                node.y + node.height / 2                          // Columns 1 & 4 - middle
-            }
-            textAnchor={
-              node.x < width * 0.25 ? 'start' :                   // Column 1 - start
-              node.x > width * 0.75 ? 'end' :                     // Column 4 - end
-              'middle'                                             // Columns 2 & 3 - middle
-            }
-            dominantBaseline={
-              node.x >= width * 0.25 && node.x <= width * 0.75 ? 
-                'auto' :                                           // Columns 2 & 3
-                'middle'                                           // Columns 1 & 4
-            }
-            className="fill-slate-700 dark:fill-slate-300 font-medium"
-            fontSize={layout.fontSize}
-            style={{ pointerEvents: 'none' }}
-          >
-            {node.type === 'income' ? `Income: ${node.label}` : 
-             node.type === 'expense' ? `Expense: ${node.label}` : 
-             node.type === 'total-expenses' ? 'Total Expenses' :
-             node.label} ({((node.value / layout.totalIncome) * 100).toFixed(2)}%)
-          </text>
+          })()}
           {hoveredNodeId === node.id && (
             <text
               x={
