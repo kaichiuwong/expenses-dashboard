@@ -143,39 +143,6 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       type: 'total' as const
     }] : [];
     
-    // Column 4: Individual expense categories - sorted by value
-    // Calculate this BEFORE column 3 to ensure heights match
-    const sortedExpenseNodes = expenseNodes
-      .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
-      .sort((a, b) => b.value - a.value);
-    
-    const expenseNodeHeights = sortedExpenseNodes.map(({ node, value }) => ({
-      node,
-      value,
-      height: Math.max((value / totalValue) * availableHeight * 0.8, 15)
-    }));
-    
-    const totalExpenseCategoriesHeight = expenseNodeHeights.reduce((sum, { height }) => sum + height, 0);
-    
-    const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
-    let currentCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
-    
-    const col4Positions = expenseNodeHeights.map(({ node, value, height }) => {
-      const position = {
-        id: node.id,
-        label: node.label,
-        color: node.color,
-        x: width - horizontalPadding - nodeWidth,
-        y: currentCol4Y,
-        width: nodeWidth,
-        height: height,
-        value,
-        type: 'expense' as const
-      };
-      currentCol4Y += height + nodeGap;
-      return position;
-    });
-    
     // Column 3: Savings and Total Expenses nodes
     const col3Positions: any[] = [];
     
@@ -209,6 +176,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       currentCol3Y += savingsHeight + col3Gap;
     }
     
+    // Store Total Expenses Y position for column 4 constraint
+    const totalExpensesY = currentCol3Y;
+    
     // Add Total Expenses node if there are expenses
     if (totalExpensesValue > 0) {
       col3Positions.push({
@@ -223,6 +193,41 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         type: 'total-expenses' as const
       });
     }
+    
+    // Column 4: Individual expense categories - sorted by value
+    // Calculate this AFTER column 3 to use Total Expenses Y position as constraint
+    const sortedExpenseNodes = expenseNodes
+      .map(node => ({ node, value: nodeValues.get(node.id) || 0 }))
+      .sort((a, b) => b.value - a.value);
+    
+    const expenseNodeHeights = sortedExpenseNodes.map(({ node, value }) => ({
+      node,
+      value,
+      height: Math.max((value / totalValue) * availableHeight * 0.8, 15)
+    }));
+    
+    const totalExpenseCategoriesHeight = expenseNodeHeights.reduce((sum, { height }) => sum + height, 0);
+    
+    const expenseGapHeight = Math.max(sortedExpenseNodes.length - 1, 0) * nodeGap;
+    // Constrain column 4 starting Y to not be higher than Total Expenses Y
+    const centeredCol4Y = verticalPadding + (availableHeight - totalExpenseCategoriesHeight - expenseGapHeight) / 2;
+    let currentCol4Y = Math.max(centeredCol4Y, totalExpensesY);
+    
+    const col4Positions = expenseNodeHeights.map(({ node, value, height }) => {
+      const position = {
+        id: node.id,
+        label: node.label,
+        color: node.color,
+        x: width - horizontalPadding - nodeWidth,
+        y: currentCol4Y,
+        width: nodeWidth,
+        height: height,
+        value,
+        type: 'expense' as const
+      };
+      currentCol4Y += height + nodeGap;
+      return position;
+    });
     
     const allPositions = [...col1Positions, ...col2Position, ...col3Positions, ...col4Positions];
     
