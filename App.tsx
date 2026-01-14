@@ -268,6 +268,14 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
     return { nodes, links };
   }, [transactions, savings]);
 
+  // Calculate optimal height based on content
+  const sankeyOptimalHeight = useMemo(() => {
+    const nodeCount = monthlySankeyData.nodes.length;
+    // Calculate height based on number of categories: more categories need more space
+    // Base: 150px, add 40px per node, max 600px
+    return Math.min(Math.max(150 + nodeCount * 40, 300), 600);
+  }, [monthlySankeyData.nodes.length]);
+
   // Measure sankey container width
   useEffect(() => {
     const updateWidth = () => {
@@ -935,7 +943,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                           nodes={monthlySankeyData.nodes}
                           links={monthlySankeyData.links}
                           width={sankeyWidth}
-                          height={500}
+                          height={sankeyOptimalHeight}
                         />
                       </div>
                     </div>

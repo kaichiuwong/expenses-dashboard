@@ -35,7 +35,6 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
   const [error, setError] = useState<string | null>(null);
   const [activeMonthIndex, setActiveMonthIndex] = useState<number | null>(null);
   const [sankeyWidth, setSankeyWidth] = useState(900);
-  const [sankeyHeight, setSankeyHeight] = useState(400);
   const sankeyContainerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,9 +93,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
       if (sankeyContainerRef.current) {
         // Get container dimensions
         const containerWidth = sankeyContainerRef.current.clientWidth;
-        const containerHeight = sankeyContainerRef.current.clientHeight;
         setSankeyWidth(Math.max(containerWidth - 100, 300)); // Subtract padding, minimum 300px
-        setSankeyHeight(Math.max(containerHeight - 20, 300)); // Use available height, minimum 300px
       }
     };
     
@@ -228,6 +225,14 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
     return `Income Flow (${selectedYear})`;
   }, [activeMonthIndex, data, selectedYear]);
 
+  // Calculate optimal height based on content
+  const sankeyOptimalHeight = useMemo(() => {
+    const nodeCount = sankeyData.nodes.length;
+    // Calculate height based on number of categories: more categories need more space
+    // Base: 150px, add 40px per node, max 600px
+    return Math.min(Math.max(150 + nodeCount * 40, 300), 600);
+  }, [sankeyData.nodes.length]);
+
   if (error) {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-r">
@@ -298,7 +303,7 @@ export const YearlyDashboard: React.FC<YearlyDashboardProps> = ({ selectedYear }
                 nodes={sankeyData.nodes}
                 links={sankeyData.links}
                 width={sankeyWidth}
-                height={sankeyHeight}
+                height={sankeyOptimalHeight}
               />
             </div>
           </div>
