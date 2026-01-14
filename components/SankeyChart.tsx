@@ -373,17 +373,24 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         };
       }).filter(Boolean);
     
+    // Calculate actual content height based on positioned nodes
+    const maxNodeBottom = allPositions.reduce((max, node) => {
+      return Math.max(max, node.y + node.height);
+    }, 0);
+    const actualContentHeight = maxNodeBottom + verticalPadding;
+    
     return {
       nodes: allPositions,
       links: linkPaths,
       fontSize,
       valueTextSize,
-      totalIncome
+      totalIncome,
+      actualHeight: actualContentHeight
     };
   }, [nodes, links, width, height]);
 
   return (
-    <svg width={width} height={height} className="overflow-visible" style={{ display: 'block' }}>
+    <svg width={width} height={layout.actualHeight} className="overflow-visible" style={{ display: 'block' }}>
       {/* Draw links first (behind nodes) */}
       {layout.links.map((link, i) => {
         const percentage = (link!.value / layout.totalIncome) * 100;
