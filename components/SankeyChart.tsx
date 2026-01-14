@@ -468,26 +468,37 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
                 </text>
               );
             } else {
-              // Horizontal text outside node for desktop or short mobile nodes
+              // Horizontal text - inside nodes on mobile for columns 1 & 4, outside for desktop
+              const mobileColumn1 = isMobile && isColumn1;
+              const mobileColumn4 = isMobile && isColumn4;
+              
               return (
                 <text
                   x={
-                    isColumn1 ? node.x + node.width + 10 :
-                    isColumn4 ? node.x - 10 :
-                    node.x + node.width / 2
+                    mobileColumn1 ? node.x + node.width - 5 :      // Mobile: inside, near right edge
+                    mobileColumn4 ? node.x + 5 :                    // Mobile: inside, near left edge
+                    isColumn1 ? node.x + node.width + 10 :         // Desktop: outside right
+                    isColumn4 ? node.x - 10 :                       // Desktop: outside left
+                    node.x + node.width / 2                         // Columns 2 & 3: center
                   }
                   y={
                     isColumn2or3 ? node.y - 10 : node.y + node.height / 2
                   }
                   textAnchor={
-                    isColumn1 ? 'start' :
-                    isColumn4 ? 'end' :
-                    'middle'
+                    mobileColumn1 ? 'end' :                         // Mobile column 1: align right
+                    mobileColumn4 ? 'start' :                       // Mobile column 4: align left
+                    isColumn1 ? 'start' :                           // Desktop column 1: align left
+                    isColumn4 ? 'end' :                             // Desktop column 4: align right
+                    'middle'                                        // Columns 2 & 3: center
                   }
                   dominantBaseline={
                     isColumn2or3 ? 'auto' : 'middle'
                   }
-                  className="fill-slate-700 dark:fill-slate-300 font-medium"
+                  className={
+                    mobileColumn1 || mobileColumn4 
+                      ? 'fill-white font-medium' 
+                      : 'fill-slate-700 dark:fill-slate-300 font-medium'
+                  }
                   fontSize={layout.fontSize}
                   style={{ pointerEvents: 'none' }}
                 >
