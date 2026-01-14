@@ -273,10 +273,6 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       }
     });
     
-    // Update nodeValues to include total-expenses node and recalculate for modified links
-    // For expense categories, their incoming value should match what they receive from total-expenses
-    nodeValues.set('total-expenses', totalExpensesValue);
-    
     // Recalculate nodeValues based on modified links for accuracy
     const updatedNodeValues = new Map<string, number>();
     modifiedLinks.forEach(link => {
@@ -287,8 +283,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         updatedNodeValues.set(link.target, (updatedNodeValues.get(link.target) || 0) + link.value);
       }
     });
-    // Keep income value
+    // Keep income value and ensure total-expenses matches exactly
     updatedNodeValues.set('income', incomeValue);
+    updatedNodeValues.set('total-expenses', totalExpensesValue);
     
     // Track vertical position for each node's flows - separate for outgoing and incoming
     const nodeOutgoingY = new Map<string, number>();
