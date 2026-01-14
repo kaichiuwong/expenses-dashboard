@@ -117,7 +117,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         y: currentIncomeSourceY,
         width: nodeWidth,
         height: nodeHeight,
-        value
+        value,
+        type: 'income' as const
       };
       currentIncomeSourceY += nodeHeight + nodeGap;
       return position;
@@ -133,7 +134,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       y: verticalPadding + (availableHeight - incomeHeight) / 2,
       width: nodeWidth,
       height: incomeHeight,
-      value: incomeValue
+      value: incomeValue,
+      type: 'total' as const
     }] : [];
     
     // Position right nodes - savings above, expenses below
@@ -172,7 +174,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         y: currentRightY,
         width: nodeWidth,
         height: nodeHeight,
-        value
+        value,
+        type: 'savings' as const
       };
       currentRightY += nodeHeight + nodeGap;
       return position;
@@ -193,7 +196,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         y: currentRightY,
         width: nodeWidth,
         height: nodeHeight,
-        value
+        value,
+        type: 'expense' as const
       };
       currentRightY += nodeHeight + nodeGap;
       return position;
@@ -364,7 +368,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             fontSize={layout.fontSize}
             style={{ pointerEvents: 'none' }}
           >
-            {node.label}
+            {node.type === 'income' ? `Income: ${node.label}` : 
+             node.type === 'expense' ? `Expense: ${node.label}` : 
+             node.label} ({((node.value / layout.totalIncome) * 100).toFixed(2)}%)
           </text>
           {hoveredNodeId === node.id && (
             <text
