@@ -183,8 +183,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     const savingsValue = savingsNodes.reduce((sum, node) => sum + (nodeValues.get(node.id) || 0), 0);
     const savingsHeight = savingsValue > 0 ? Math.max((savingsValue / totalValue) * availableHeight * 0.8, 15) : 0;
     
-    // Use the EXACT sum of expense category heights for Total Expenses
-    const totalExpensesHeight = totalExpenseCategoriesHeight;
+    // Calculate Total Expenses height proportionally (not as sum of categories with minimums)
+    // This represents the SOURCE height, flows will adapt to reach TARGET categories
+    const totalExpensesHeight = totalExpensesValue > 0 ? (totalExpensesValue / totalValue) * availableHeight * 0.8 : 0;
     
     const col3Gap = savingsHeight > 0 && totalExpensesHeight > 0 ? nodeGap * 3 : 0;
     const col3TotalHeight = savingsHeight + col3Gap + totalExpensesHeight;
