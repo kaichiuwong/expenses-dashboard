@@ -938,7 +938,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
                     {/* Income Flow Sankey Diagram - Full Width */}
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
                       <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Income Flow</h3>
-                      <div ref={sankeyContainerRef} className="w-full flex items-center justify-center">
+                      <div ref={sankeyContainerRef} className="w-full flex items-start justify-center">
                         <SankeyChart
                           nodes={monthlySankeyData.nodes}
                           links={monthlySankeyData.links}

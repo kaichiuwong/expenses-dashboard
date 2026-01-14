@@ -401,26 +401,6 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             >
               <title>{`${link!.source} → ${link!.target}: $${link!.value.toFixed(2)}`}</title>
             </path>
-            {isHovered && (
-              <text
-                x={width / 2}
-                y={20}
-                textAnchor="middle"
-                className="fill-slate-700 dark:fill-slate-200 font-semibold"
-                fontSize={13}
-                style={{ pointerEvents: 'none' }}
-              >
-                <tspan className="fill-slate-600 dark:fill-slate-300">
-                  {link!.target}: 
-                </tspan>
-                <tspan className="fill-slate-800 dark:fill-white" dx="5">
-                  ${link!.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </tspan>
-                <tspan className="fill-slate-500 dark:fill-slate-400" dx="5">
-                  ({percentage.toFixed(1)}%)
-                </tspan>
-              </text>
-            )}
           </g>
         );
       })}
