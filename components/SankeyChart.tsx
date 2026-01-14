@@ -265,6 +265,23 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       }
     });
     
+    // Update nodeValues to include total-expenses node and recalculate for modified links
+    // For expense categories, their incoming value should match what they receive from total-expenses
+    nodeValues.set('total-expenses', totalExpensesValue);
+    
+    // Recalculate nodeValues based on modified links for accuracy
+    const updatedNodeValues = new Map<string, number>();
+    modifiedLinks.forEach(link => {
+      // Track outgoing values
+      updatedNodeValues.set(link.source, (updatedNodeValues.get(link.source) || 0) + link.value);
+      // Track incoming values for non-income nodes
+      if (link.target !== 'income') {
+        updatedNodeValues.set(link.target, (updatedNodeValues.get(link.target) || 0) + link.value);
+      }
+    });
+    // Keep income value
+    updatedNodeValues.set('income', incomeValue);
+    
     // Track vertical position for each node's flows - separate for outgoing and incoming
     const nodeOutgoingY = new Map<string, number>();
     const nodeIncomingY = new Map<string, number>();
@@ -306,11 +323,11 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
         if (!sourceNode || !targetNode) return null;
         
         // Calculate link height at SOURCE based on source node's proportion
-        const sourceNodeValue = nodeValues.get(link.source) || 0;
+        const sourceNodeValue = updatedNodeValues.get(link.source) || 0;
         const sourceLinkHeight = sourceNodeValue > 0 ? (link.value / sourceNodeValue) * sourceNode.height : 2;
         
         // Calculate link height at TARGET based on target node's proportion
-        const targetNodeValue = nodeValues.get(link.target) || 0;
+        const targetNodeValue = updatedNodeValues.get(link.target) || 0;
         const targetLinkHeight = targetNodeValue > 0 ? (link.value / targetNodeValue) * targetNode.height : 2;
         
         // Get current flow positions - use outgoing for source, incoming for target
