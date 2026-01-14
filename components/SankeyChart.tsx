@@ -33,8 +33,8 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     // Don't limit height, use requested height to allow proper display
     const constrainedHeight = height;
     
-    // Calculate node positions and dimensions
-    const padding = 50;
+    // Calculate node positions and dimensions - minimal padding for mobile
+    const padding = width < 500 ? 8 : width < 700 ? 20 : 40;
     const nodeWidth = 24;
     const nodeGap = 8;
     
