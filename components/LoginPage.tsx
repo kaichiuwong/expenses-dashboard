@@ -148,12 +148,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-            <div className="w-12 h-12 bg-indigo-600 dark:bg-indigo-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30 text-2xl">
-                $
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                <span className="text-4xl">💸</span>
             </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-          {step === 'email' ? 'Sign in to Expensify' : 'Welcome Back'}
+          {step === 'email' ? 'Expensify' : 'Welcome Back'}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
           {step === 'email' ? 'Enter your email to access your dashboard' : `Authenticating as ${email}`}
