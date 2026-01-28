@@ -262,7 +262,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
             </div>
           )}
-        </div>
         
         <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-6">
           Secure, private, and encrypted. Your financial data stays yours.
