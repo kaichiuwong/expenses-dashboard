@@ -423,9 +423,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       {/* --- Sidebar (Desktop) --- */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex-shrink-0 z-20 transition-colors">
         <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700">
-          <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30 mr-3">
-            $
-          </div>
+          <span className="text-2xl mr-3">💸</span>
           <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Expensify</span>
         </div>
 
@@ -498,9 +496,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
       }`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30 mr-3">
-              $
-            </div>
+            <span className="text-2xl mr-3">💸</span>
             <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Expensify</span>
           </div>
           <button
@@ -609,9 +605,7 @@ const Dashboard: React.FC<{ user: any, onLogout: () => void }> = ({ user, onLogo
             >
               <MenuIcon />
             </button>
-            <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
-              $
-            </div>
+            <span className="text-2xl">💸</span>
             <span className="font-bold text-slate-900 dark:text-white">Expensify</span>
           </div>
           <div className="flex items-center gap-2">

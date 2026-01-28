@@ -136,8 +136,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors relative">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-emerald-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 transition-colors relative">
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
         <button 
             onClick={toggleTheme}
             className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -145,29 +146,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
       </div>
-      
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                <span className="text-4xl">💸</span>
-            </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-          {step === 'email' ? 'Expensify' : 'Welcome Back'}
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          {step === 'email' ? 'Enter your email to access your dashboard' : `Authenticating as ${email}`}
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200 dark:border-slate-700">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+            <span className="text-4xl">💸</span>
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-center text-slate-800 dark:text-slate-100 mb-8">Expensify</h1>
+        
+        {step === 'passkey' && (
+          <div className="text-center mb-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">Authenticating as {email}</p>
+          </div>
+        )}
           
-          {step === 'email' && (
+        {step === 'email' && (
             <form className="space-y-6" onSubmit={handleEmailSubmit}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Email address
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email Address
                 </label>
                 <div className="mt-1">
                   <input
@@ -178,7 +176,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-700 dark:text-white transition-colors"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -201,25 +199,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-slate-800 dark:hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                   ) : (
-                      'Continue'
+                      <>
+                        <span className="text-xl">🔑</span>
+                        Continue with Passkey
+                      </>
                   )}
                 </button>
               </div>
             </form>
           )}
 
-          {step === 'passkey' && (
+        {step === 'passkey' && (
              <div className="space-y-6">
                 <div className="flex flex-col items-center justify-center space-y-4 py-4">
-                    <div className={`p-4 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 ${isLoading ? 'animate-pulse' : ''}`}>
+                    <div className={`p-4 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 ${isLoading ? 'animate-pulse' : ''}`}>
                         <FingerprintIcon />
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
@@ -237,7 +238,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <button
                         onClick={handlePasskeyLogin}
                         disabled={isLoading}
-                        className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {isLoading ? 'Verifying...' : 'Authenticate with Passkey'}
                     </button>
@@ -245,7 +246,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <button
                         onClick={handlePasskeyRegistration}
                         disabled={isLoading}
-                        className="w-full flex justify-center items-center py-2 px-4 border border-indigo-200 dark:border-indigo-800 rounded-md shadow-sm text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        className="w-full flex justify-center items-center py-3 px-4 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
                     >
                         First time? Create Passkey
                     </button>
@@ -253,7 +254,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <button
                         onClick={handleReset}
                         disabled={isLoading}
-                        className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
                     >
                         <BackIcon />
                         Use different email
@@ -263,6 +264,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           )}
 
         </div>
+        
+        <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-6">
+          Secure, private, and encrypted. Your financial data stays yours.
+        </p>
       </div>
     </div>
   );
