@@ -217,8 +217,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </form>
           )}
 
-        {step === 'passkey' && (
-             <div className="space-y-6">
+          {step === 'passkey' && (
+            <div className="space-y-6">
                 <div className="flex flex-col items-center justify-center space-y-4 py-4">
                     <div className={`p-4 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 ${isLoading ? 'animate-pulse' : ''}`}>
                         <FingerprintIcon />
@@ -260,9 +260,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                         Use different email
                     </button>
                 </div>
-             </div>
+            </div>
           )}
-
         </div>
         
         <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-6">
